@@ -3,39 +3,109 @@ const session = require('express-session');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcrypt');
+const multer = require('multer');
 const path = require('path');
-const db = require('./database');  // vaše database.js, ki ureja SQLite
+const fs = require('fs');
+const db = require('./database');
+
+// Ustvari mapo za firmware
+if (!fs.existsSync('./firmware')) {
+  fs.mkdirSync('./firmware');
+}
+
+// Multer nastavitve
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, './firmware/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  }
+});
+const upload = multer({
+  storage: storage,
+  fileFilter: (req, file, cb) => {
+    if (path.extname(file.originalname) === '.bin') {
+      cb(null, true);
+    } else {
+      cb(new Error('Samo .bin datoteke so dovoljene!'));
+    }
+  }
+});
+
+// Ustvari tabele
+db.serialize(() => {
+  console.log('Ustvarjanje tabel...');
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE,
+      password TEXT,
+      is_admin INTEGER DEFAULT 0,
+      auto_update INTEGER DEFAULT 1
+    );
+    CREATE TABLE IF NOT EXISTS devices (
+      id TEXT PRIMARY KEY,
+      name TEXT,
+      params TEXT,
+      value1 REAL,
+      value2 REAL,
+      last_update INTEGER,
+      firmware_version TEXT DEFAULT 'krmilnica_01.01.24'
+    );
+    CREATE TABLE IF NOT EXISTS firmware (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      version TEXT UNIQUE,
+      filename TEXT,
+      upload_date INTEGER,
+      file_path TEXT
+    );
+    CREATE TABLE IF NOT EXISTS user_devices (
+      user_id INTEGER,
+      device_id TEXT,
+      PRIMARY KEY(user_id, device_id),
+      FOREIGN KEY(user_id) REFERENCES users(id),
+      FOREIGN KEY(device_id) REFERENCES devices(id)
+    );
+  `, (err) => {
+    if (err) {
+      console.error('Napaka pri ustvarjanju tabel:', err);
+      process.exit(1);
+    } else {
+      console.log('Tabele ustvarjene.');
+      startServer();
+    }
+  });
+});
 
 const app = express();
-
-// Nastavitve za POST podatke
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
-// Nastavitve seje
 app.use(session({
-  secret: 'moj-tajni-kljuc',
+  secret: process.env.SESSION_SECRET || 'moj-tajni-kljuc',
   resave: false,
   saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 ur
+  }
 }));
-
-// Passport inicializacija za avtentikacijo
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Statične datoteke - public mapa za CSS, JS, slike
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Nastavitev EJS kot predlog
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+app.use(express.static('public'));
+app.use('/firmware', express.static('firmware'));
 
-// Passport lokalna strategija prijave
+const deviceRoutes = require('./routes/devices');
+app.use('/device', deviceRoutes);
+
 passport.use(new LocalStrategy((username, password, done) => {
+  console.log('Prijava za uporabnika:', username);
   db.get('SELECT * FROM users WHERE username = ?', [username], (err, user) => {
     if (err) return done(err);
-    if (!user) return done(null, false, { message: 'Napačno uporabniško ime' });
-    if (!bcrypt.compareSync(password, user.password)) return done(null, false, { message: 'Napačno geslo' });
+    if (!user) return done(null, false, { message: 'Napačno uporabniško ime.' });
+    if (!bcrypt.compareSync(password, user.password)) return done(null, false, { message: 'Napačno geslo.' });
     return done(null, user);
   });
 }));
@@ -45,69 +115,114 @@ passport.deserializeUser((id, done) => {
   db.get('SELECT * FROM users WHERE id = ?', [id], (err, user) => done(err, user));
 });
 
-// Middleware za zaščito poti
-function ensureAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) return next();
-  res.redirect('/login');
-}
-
-// Prikaz login strani
-app.get('/login', (req, res) => {
-  res.render('login');
-});
-
-// Obdelava prijave
-app.post('/login', passport.authenticate('local', {
-  successRedirect: '/',
-  failureRedirect: '/login'
-}));
-
-// Prikaz registracije
-app.get('/register', (req, res) => {
-  res.render('register');
-});
-
-// Obdelava registracije
+app.get('/register', (req, res) => res.render('register'));
 app.post('/register', (req, res) => {
   const { username, password } = req.body;
-  if (!username || !password) return res.send('Uporabniško ime in geslo sta obvezna.');
-
+  console.log('Registracija za uporabnika:', username);
+  if (!username || !password || username.length < 3 || password.length < 6 || !/^[a-zA-Z0-9]+$/.test(username)) {
+    return res.send('Username mora biti vsaj 3 znake, password vsaj 6 znakov, in username samo črke/številke.');
+  }
   const hashedPassword = bcrypt.hashSync(password, 10);
   db.run('INSERT INTO users (username, password) VALUES (?, ?)', [username, hashedPassword], (err) => {
-    if (err) return res.send('Uporabnik že obstaja ali napaka.');
+    if (err) {
+      console.error('Napaka pri registraciji:', err);
+      return res.send('Uporabnik že obstaja.');
+    }
     res.redirect('/login');
   });
 });
 
-// Osnovna stran – seznam naprav za prijavljenega uporabnika
-app.get('/', ensureAuthenticated, (req, res) => {
-  db.all('SELECT * FROM devices WHERE user_id = ?', [req.user.id], (err, devices) => {
-    if (err) return res.send('Napaka pri pridobivanju naprav.');
-    res.render('index', { devices, user: req.user });
+app.get('/login', (req, res) => res.render('login'));
+app.post('/login', passport.authenticate('local', { successRedirect: '/', failureRedirect: '/login' }));
+
+app.get('/', (req, res) => {
+  if (!req.isAuthenticated()) return res.redirect('/login');
+  console.log('Osnovna stran za uporabnika:', req.user.id);
+  db.all('SELECT devices.* FROM devices JOIN user_devices ON devices.id = user_devices.device_id WHERE user_devices.user_id = ?', [req.user.id], (err, devices) => {
+    if (err) {
+      console.error('Napaka pri pridobivanju naprav:', err);
+      return res.send('Napaka pri pridobivanju naprav.');
+    }
+    console.log('Najdenih naprav:', devices.length);
+    res.render('index', { devices: devices || [], user: req.user });
   });
 });
 
-// Obdelava dodajanja naprave
-app.post('/add-device', ensureAuthenticated, (req, res) => {
+app.post('/add-device', (req, res) => {
+  if (!req.isAuthenticated()) return res.redirect('/login');
   const { name, deviceId } = req.body;
-  if (!name || !deviceId) return res.send('Ime in ID naprave sta obvezna.');
-  if (deviceId.length !== 8) return res.send('ID naprave mora biti 8-mestni.');
-
-  db.run('INSERT INTO devices (id, name, user_id) VALUES (?, ?, ?)', [deviceId, name, req.user.id], (err) => {
-    if (err) return res.send('Naprava že obstaja ali napaka.');
-    res.redirect('/');
+  console.log('Dodajanje naprave:', name, deviceId);
+  if (deviceId.length !== 8 || !/^[a-zA-Z0-9]{8}$/.test(deviceId)) {
+    return res.send('ID mora biti točno 8-mestni in vsebovati samo črke ter številke.');
+  }
+  db.run('INSERT OR IGNORE INTO devices (id, name) VALUES (?, ?)', [deviceId, name], (err) => {
+    if (err) {
+      console.error('Napaka pri dodajanju naprave:', err);
+      return res.send('Naprava že obstaja ali napaka v bazi.');
+    }
+    db.run('INSERT OR IGNORE INTO user_devices (user_id, device_id) VALUES (?, ?)', [req.user.id, deviceId], (err) => {
+      if (err) {
+        console.error('Napaka pri povezovanju naprave:', err);
+        return res.send('Napaka pri povezovanju naprave.');
+      }
+      res.redirect('/');
+    });
   });
 });
 
-// Odjava
+app.get('/admin', (req, res) => {
+  if (!req.isAuthenticated() || !req.user.is_admin) {
+    return res.redirect('/');
+  }
+  db.all('SELECT * FROM firmware ORDER BY upload_date DESC', [], (err, firmwares) => {
+    res.render('admin', { firmwares: firmwares || [], user: req.user });
+  });
+});
+
+app.post('/admin/upload-firmware', upload.single('firmware'), (req, res) => {
+  if (!req.isAuthenticated() || !req.user.is_admin) {
+    return res.redirect('/');
+  }
+  const { version } = req.body;
+  const filename = req.file.originalname;
+  const filePath = `/firmware/${filename}`;
+  const uploadDate = Math.floor(Date.now() / 1000);
+
+  db.run('INSERT INTO firmware (version, filename, upload_date, file_path) VALUES (?, ?, ?, ?)',
+    [version, filename, uploadDate, filePath], (err) => {
+      if (err) {
+        console.error('Napaka pri nalaganju firmware:', err);
+        return res.send('Firmware z to verzijo že obstaja.');
+      }
+      res.redirect('/admin');
+    });
+});
+
+app.post('/admin/delete-firmware/:id', (req, res) => {
+  if (!req.isAuthenticated() || !req.user.is_admin) {
+    return res.redirect('/');
+  }
+  const firmwareId = req.params.id;
+
+  db.get('SELECT * FROM firmware WHERE id = ?', [firmwareId], (err, firmware) => {
+    if (firmware) {
+      const filePath = path.join(__dirname, firmware.file_path);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      db.run('DELETE FROM firmware WHERE id = ?', [firmwareId]);
+    }
+    res.redirect('/admin');
+  });
+});
+
 app.get('/logout', (req, res) => {
-  req.logout(() => {
-    res.redirect('/login');
-  });
+  req.logout(() => res.redirect('/login'));
 });
 
-// Zaženite strežnik
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Strežnik teče na http://localhost:${PORT}`);
-});
+function startServer() {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Strežnik teče na http://0.0.0.0:${PORT}`);
+  });
+}
