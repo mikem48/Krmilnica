@@ -82,11 +82,12 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'moj-tajni-kljuc',
+  secret: process.env.SESSION_SECRET || 'moj-tajni-kljuc-' + Math.random(),
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: false,  // Nastavite na true samo za HTTPS
+    httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 24 ur
   }
 }));
