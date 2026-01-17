@@ -7,95 +7,217 @@
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
+<style>
+  body {
+    background: linear-gradient(120deg, #6370ff 0%, #835ffb 100%);
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    color: #222;
+  }
 
-<div class="container main-content">
-  <h2>Nastavitve naprave in krmilnice</h2>
+  .container {
+    max-width: 900px;
+    margin: 40px auto 80px;
+    padding: 0 24px;
+  }
 
-  <form action="/settings" method="POST" class="settings-form">
-    <input type="hidden" name="device_id" value="<%= settings.device_id %>">
-    <fieldset>
-      <legend><strong>Nastavitve naprave</strong></legend>
+  /* Naslov */
+  h2 {
+    font-weight: 600;
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+    color: #222;
+  }
 
-      <label>Ura:
-        <input class="small-input" type="number" name="ura_h" min="0" max="23" value="<%= settings.ura_h || '' %>" required> h :
-        <input class="small-input" type="number" name="ura_min" min="0" max="59" value="<%= settings.ura_min || '' %>" required> min
-      </label>
+  /* Kartica z nastavitvami */
+  .settings-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 22px rgba(66, 89, 135, 0.25);
+    padding: 24px 30px;
+    max-width: 700px;
+    margin: 0 auto 60px;
+  }
 
-      <label>Datum:
-        <input class="small-input" type="number" name="datum_dan" min="1" max="31" value="<%= settings.datum_dan || '' %>" required> .
-        <input class="small-input" type="number" name="datum_mesec" min="1" max="12" value="<%= settings.datum_mesec || '' %>" required> .
-        <input class="small-input" type="number" name="datum_leto" min="2020" max="2100" value="<%= settings.datum_leto || '' %>" required>
-      </label>
+  /* Naslov kartice */
+  .settings-card h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: #222;
+  }
 
-      <label>Visina:
-        <input type="number" step="0.01" name="visina" value="<%= settings.visina || '' %>" required> cm
-      </label>
+  /* Forme */
+  form label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #444;
+  }
 
-      <label>Wifi čas:
-        <input type="number" name="wifi_cas" value="<%= settings.wifi_cas || '' %>" required> s
-      </label>
+  form input[type="number"],
+  form input[type="text"] {
+    width: 100%;
+    max-width: 160px;
+    padding: 10px 14px;
+    font-size: 1rem;
+    border: 1.5px solid #aac7fc;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
 
-      <label>Obvestilo napetost:
-        <input type="number" step="0.01" name="obvestilo_napetost" value="<%= settings.obvestilo_napetost || '' %>" required> V
-      </label>
+  form input[type="number"]:focus,
+  form input[type="text"]:focus {
+    outline: none;
+    border-color: #4365ff;
+    box-shadow: 0 0 10px rgba(67, 101, 255, 0.5);
+  }
 
-      <label>Obvestilo krmilo:
-        <input type="number" name="obvestilo_krmilo" value="<%= settings.obvestilo_krmilo || '' %>" required> %
-      </label>
+  /* Inline skupine za ura (h:min) in datum */
+  .inline-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 25px;
+  }
 
-      <label>Obvestilo številka:
-        <input type="text" name="obvestilo_stevilka" value="<%= settings.obvestilo_stevilka || '' %>" required>
-      </label>
-    </fieldset>
+  .inline-group input {
+    max-width: 70px;
+    text-align: center;
+  }
 
-    <hr>
+  /* Checkboxi za dneve */
+  .checkbox-group label {
+    font-weight: 600;
+    margin-right: 18px;
+    user-select: none;
+  }
 
-    <fieldset>
-      <legend><strong>Krmilnica</strong></legend>
+  .checkbox-group input[type="checkbox"] {
+    margin-right: 6px;
+    transform: scale(1.1);
+    vertical-align: middle;
+    cursor: pointer;
+  }
 
-      <p>Časovnika: <%= settings.casovnika_on ? 'on' : 'off' %></p>
+  /* Gumbi */
+  button.btn-primary {
+    background-color: #1e6ef2;
+    color: white;
+    border: none;
+    padding: 12px 32px;
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 25px;
+    cursor: pointer;
+    box-shadow: 0 6px 12px rgba(30, 110, 242, 0.4);
+    transition: background-color 0.3s ease;
+  }
 
-      <label>Ura 1:
-        <input class="small-input" type="number" name="ura1_h" min="0" max="23" value="<%= settings.ura1_h || '' %>" required> h :
-        <input class="small-input" type="number" name="ura1_min" min="0" max="59" value="<%= settings.ura1_min || '' %>" required> min
-      </label>
+  button.btn-primary:hover {
+    background-color: #155bb5;
+  }
 
-      <label>
-        Ura 2:
-        <input class="small-input" type="number" name="ura2_h" min="0" max="23" value="<%= settings.ura2_h || '' %>" > h :
-        <input class="small-input" type="number" name="ura2_min" min="0" max="59" value="<%= settings.ura2_min || '' %>" > min
-        <input type="checkbox" name="casovnik2" <%= settings.casovnik2 ? 'checked' : '' %> > časovnik 2
-      </label>
+  a.btn-secondary {
+    margin-left: 16px;
+    background-color: #6c757d;
+    color: white;
+    padding: 12px 28px;
+    font-weight: 700;
+    border-radius: 25px;
+    text-decoration: none;
+    display: inline-block;
+    transition: background-color 0.3s ease;
+  }
 
-      <label>Čas delovanja:
-        <input type="number" name="cas_delovanja" value="<%= settings.cas_delovanja || '' %>" required> s
-      </label>
+  a.btn-secondary:hover {
+    background-color: #565e64;
+  }
+</style>
 
-      <label>Hitrost motorja:
-        <input type="number" name="hitrost_motorja" value="<%= settings.hitrost_motorja || '' %>" required> %
-      </label>
+<div class="container">
+  <h2>Nastavitve naprave</h2>
 
-      <div>
-        <label><input type="checkbox" name="pon" <%= settings.pon ? 'checked' : '' %> > PON</label><br>
-        <label><input type="checkbox" name="tor" <%= settings.tor ? 'checked' : '' %> > TOR</label><br>
-        <label><input type="checkbox" name="sre" <%= settings.sre ? 'checked' : '' %> > SRE</label><br>
-        <label><input type="checkbox" name="cet" <%= settings.cet ? 'checked' : '' %> > CET</label><br>
-        <label><input type="checkbox" name="pet" <%= settings.pet ? 'checked' : '' %> > PET</label><br>
-        <label><input type="checkbox" name="sob" <%= settings.sob ? 'checked' : '' %> > SOB</label><br>
-        <label><input type="checkbox" name="ned" <%= settings.ned ? 'checked' : '' %> > NED</label>
+  <div class="settings-card">
+    <form action="/settings" method="POST">
+
+      <!-- Skrito polje za device_id, da ga POSTa ob shranjevanju -->
+      <input type="hidden" name="device_id" value="<%= settings.device_id %>">
+
+      <!-- Čas in datum -->
+      <label>Ura in minuta:</label>
+      <div class="inline-group">
+        <input type="number" name="ura_h" min="0" max="23" value="<%= settings.ura_h || '' %>" required> :
+        <input type="number" name="ura_min" min="0" max="59" value="<%= settings.ura_min || '' %>" required>
       </div>
-    </fieldset>
 
-    <button class="btn btn-primary" type="submit">Potrdi</button>
-    <a href="/" class="btn btn-secondary">Nazaj</a>
+      <label>Datum (dan, mesec, leto):</label>
+      <div class="inline-group">
+        <input type="number" name="datum_dan" min="1" max="31" value="<%= settings.datum_dan || '' %>" required>
+        <input type="number" name="datum_mesec" min="1" max="12" value="<%= settings.datum_mesec || '' %>" required>
+        <input type="number" name="datum_leto" min="2020" max="2100" value="<%= settings.datum_leto || '' %>" required>
+      </div>
 
-  </form>
+      <!-- Ostale nastavitve -->
+      <label>Višina (cm):</label>
+      <input type="number" step="0.01" name="visina" value="<%= settings.visina || '' %>" required>
 
-  <div class="menu-buttons" style="margin-top: 20px;">
-    <a href="/stanje" class="btn btn-info">Stanje</a>
-    <a href="/test" class="btn btn-info">Test</a>
-    <a href="/gsm" class="btn btn-info">GSM</a>
-    <a href="/settings" class="btn btn-info">Nastavitve</a>
+      <label>Wifi čas (s):</label>
+      <input type="number" name="wifi_cas" value="<%= settings.wifi_cas || '' %>" required>
+
+      <label>Obvestilo napetost (V):</label>
+      <input type="number" step="0.01" name="obvestilo_napetost" value="<%= settings.obvestilo_napetost || '' %>" required>
+
+      <label>Obvestilo krmilo (%):</label>
+      <input type="number" name="obvestilo_krmilo" value="<%= settings.obvestilo_krmilo || '' %>" required>
+
+      <label>Obvestilo številka:</label>
+      <input type="text" name="obvestilo_stevilka" value="<%= settings.obvestilo_stevilka || '' %>" required>
+
+      <hr style="margin: 32px 0; border: 0; border-top: 1px solid #ddd;">
+
+      <!-- Krmilnica -->
+      <h3>Krmilnica</h3>
+      <p><b>Časovnika: </b><%= settings.casovnika_on ? "On" : "Off" %></p>
+
+      <label>Ura 1 in minuta:</label>
+      <div class="inline-group">
+        <input type="number" name="ura1_h" min="0" max="23" value="<%= settings.ura1_h || '' %>" required> :
+        <input type="number" name="ura1_min" min="0" max="59" value="<%= settings.ura1_min || '' %>" required>
+      </div>
+
+      <label>Ura 2 in minuta:</label>
+      <div class="inline-group" style="align-items: center;gap: 12px;">
+        <input type="number" name="ura2_h" min="0" max="23" value="<%= settings.ura2_h || '' %>"> :
+        <input type="number" name="ura2_min" min="0" max="59" value="<%= settings.ura2_min || '' %>">
+        <label style="font-weight: normal; margin-left: 12px;">
+          <input type="checkbox" name="casovnik2" <%= settings.casovnik2 ? "checked" : "" %> > časovnik 2
+        </label>
+      </div>
+
+      <label>Čas delovanja (s):</label>
+      <input type="number" name="cas_delovanja" value="<%= settings.cas_delovanja || '' %>" required>
+
+      <label>Hitrost motorja (%):</label>
+      <input type="number" name="hitrost_motorja" value="<%= settings.hitrost_motorja || '' %>" required>
+
+      <label>Dnevi za vklop:</label>
+      <div class="checkbox-group" style="margin-bottom: 32px;">
+        <label><input type="checkbox" name="pon" <%= settings.pon ? "checked" : "" %> > PON</label>
+        <label><input type="checkbox" name="tor" <%= settings.tor ? "checked" : "" %> > TOR</label>
+        <label><input type="checkbox" name="sre" <%= settings.sre ? "checked" : "" %> > SRE</label>
+        <label><input type="checkbox" name="cet" <%= settings.cet ? "checked" : "" %> > CET</label>
+        <label><input type="checkbox" name="pet" <%= settings.pet ? "checked" : "" %> > PET</label>
+        <label><input type="checkbox" name="sob" <%= settings.sob ? "checked" : "" %> > SOB</label>
+        <label><input type="checkbox" name="ned" <%= settings.ned ? "checked" : "" %> > NED</label>
+      </div>
+
+      <button type="submit" class="btn-primary">Shrani nastavitve</button>
+      <a href="/" class="btn-secondary">Nazaj</a>
+
+    </form>
   </div>
 </div>
 </body>
