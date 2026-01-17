@@ -44,36 +44,28 @@ db.serialize(() => {
       is_admin INTEGER DEFAULT 0,
       auto_update INTEGER DEFAULT 1
     );
-    CREATE TABLE IF NOT EXISTS devices (
-      id TEXT PRIMARY KEY,
-      name TEXT,
-      params TEXT,
-      value1 REAL,
-      value2 REAL,
-      last_update INTEGER,
-      firmware_version TEXT DEFAULT 'krmilnica_01.01.24'
-    );
-    CREATE TABLE IF NOT EXISTS firmware (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      version TEXT UNIQUE,
-      filename TEXT,
-      upload_date INTEGER,
-      file_path TEXT
-    );
-    CREATE TABLE IF NOT EXISTS user_devices (
-      user_id INTEGER,
-      device_id TEXT,
-      PRIMARY KEY(user_id, device_id),
-      FOREIGN KEY(user_id) REFERENCES users(id),
-      FOREIGN KEY(device_id) REFERENCES devices(id)
-    );
+    -- ostale tabele --
   `, (err) => {
     if (err) {
       console.error('Napaka pri ustvarjanju tabel:', err);
       process.exit(1);
     } else {
       console.log('Tabele ustvarjene.');
-      startServer();
+      
+      // Ustvari testnega admin uporabnika
+      const testUsername = 'admin';
+      const testPassword = 'admin123';
+      const hashedPassword = bcrypt.hashSync(testPassword, 10);
+      
+      db.run('INSERT OR IGNORE INTO users (username, password, is_admin) VALUES (?, ?, 1)',
+        [testUsername, hashedPassword], (err) => {
+          if (err) {
+            console.error('Napaka pri ustvarjanju admin uporabnika:', err);
+          } else {
+            console.log('✓ Admin uporabnik ustvarjen (username: admin, password: admin123)');
+          }
+          startServer();
+        });
     }
   });
 });
