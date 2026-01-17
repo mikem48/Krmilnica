@@ -84,17 +84,6 @@
 <!-- Nastavitve naprave -->
 <form action="/" method="GET" novalidate>
   <h3>Nastavitve</h3>
-  
-  <label>Ura:</label>
-  <input class="input-line" type="number" name="ura_h" min="0" max="23" value="15" required /> h :
-  <input class="input-line" type="number" name="ura_min" min="0" max="59" value="38" required /> min
-  <br />
-
-  <label>Datum:</label>
-  <input class="input-line" type="number" name="datum_dan" min="1" max="31" value="7" required /> .
-  <input class="input-line" type="number" name="datum_mesec" min="1" max="12" value="1" required /> .
-  <input class="input-line" type="number" name="datum_leto" min="2023" max="2100" value="2025" required />
-  <br />
 
   <label>Visina:</label>
   <input class="input-line" type="number" name="visina" step="0.01" value="100.00" required /> cm
@@ -161,10 +150,6 @@
 
   <div class="btn-group">
     <button type="submit">Potrdi</button>
-    <button type="button">Stanje</button>
-    <button type="button">Test</button>
-    <button type="button">GSM</button>
-    <button type="button">Nastavitve</button>
   </div>
 </form>
 
