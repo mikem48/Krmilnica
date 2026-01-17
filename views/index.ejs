@@ -145,11 +145,11 @@
             <div class="card-body">
               <p class="device-id">ID: <%= device.id %></p>
               <div>
-                <span class="value-label">Vrednost 1:</span> 
+                <span class="value-label">Napetost:</span> 
                 <span><%= device.value1 !== null && device.value1 !== undefined ? device.value1.toFixed(2) : '--' %></span>
               </div>
               <div>
-                <span class="value-label">Vrednost 2:</span> 
+                <span class="value-label">Nivo krmila:</span> 
                 <span><%= device.value2 !== null && device.value2 !== undefined ? device.value2.toFixed(2) : '--' %></span>
               </div>
               <p class="mt-3 fst-italic text-muted"><small>Zadnja posodobitev: <%= lastUpdateFormatted %></small></p>
