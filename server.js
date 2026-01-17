@@ -9,7 +9,7 @@ const fs = require('fs');
 const db = require('./database');
 const settingsRouter = require('./routes/settings');
 
-app.use('/', settingsRouter);
+
 // Ustvari mapo za firmware
 if (!fs.existsSync('./firmware')) {
   fs.mkdirSync('./firmware');
@@ -73,6 +73,7 @@ db.serialize(() => {
 });
 
 const app = express();
+app.use('/', settingsRouter);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(session({
