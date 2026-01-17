@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Nastavitve naprave in krmilnice</title>
 
+  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
 
   <style>
@@ -58,6 +60,7 @@
 </head>
 
 <body>
+  <!-- Navigacija -->
   <nav class="navbar navbar-expand-md navbar-light">
     <div class="container">
       <a class="navbar-brand fw-bold fs-4" href="/">
@@ -88,6 +91,7 @@
     </div>
   </nav>
 
+  <!-- Glavna vsebina -->
   <div class="container main-container">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
       <h2 class="mb-0">Nastavitve naprave</h2>
@@ -128,7 +132,7 @@
               <small>Zadnja posodobitev: <%= settings.last_update || 'Nikoli' %></small>
             </p>
 
-            <!-- ohranjen element "Nastavitve" (samo vodi na isto stran) -->
+            <!-- gumb (ostane element, vodi na isto stran) -->
             <a class="btn btn-primary btn-custom" href="">
               <i class="bi bi-gear"></i> Nastavitve
             </a>
@@ -151,6 +155,7 @@
           </div>
 
           <div class="card-body">
+            <!-- action="" -> POST na isti URL (/:id/settings), ne glede na mount path -->
             <form action="" method="POST" class="settings-card" id="settingsForm">
               <input type="hidden" name="device_id" value="<%= settings.device_id %>">
 
@@ -331,7 +336,9 @@
                     data-original="<%= settings.ura2_h != null ? String(settings.ura2_h) : '' %>"
                   >
                 </div>
+
                 <div class="col-md-1 text-center d-none d-md-block">:</div>
+
                 <div class="col-md-4">
                   <input
                     type="number"
@@ -346,7 +353,7 @@
                 </div>
 
                 <div class="col-md-3">
-                  <!-- hidden "false" za checkbox (pošljemo samo, če se checkbox spremeni na unchecked) -->
+                  <!-- hidden false za checkbox -->
                   <input type="hidden" name="casovnik2" value="" disabled data-false-for="casovnik2">
 
                   <div class="form-check">
@@ -395,8 +402,15 @@
                 <div class="col-6 col-md-3">
                   <input type="hidden" name="pon" value="" disabled data-false-for="pon">
                   <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="pon" id="pon" value="1"
-                      data-original="<%= settings.pon ? '1' : '0' %>" <%= settings.pon ? "checked" : "" %> >
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      name="pon"
+                      id="pon"
+                      value="1"
+                      data-original="<%= settings.pon ? '1' : '0' %>"
+                      <%= settings.pon ? "checked" : "" %>
+                    >
                     <label class="form-check-label" for="pon" data-bs-toggle="tooltip" data-bs-title="Ponedeljek">PON</label>
                   </div>
                 </div>
@@ -404,8 +418,15 @@
                 <div class="col-6 col-md-3">
                   <input type="hidden" name="tor" value="" disabled data-false-for="tor">
                   <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="tor" id="tor" value="1"
-                      data-original="<%= settings.tor ? '1' : '0' %>" <%= settings.tor ? "checked" : "" %> >
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      name="tor"
+                      id="tor"
+                      value="1"
+                      data-original="<%= settings.tor ? '1' : '0' %>"
+                      <%= settings.tor ? "checked" : "" %>
+                    >
                     <label class="form-check-label" for="tor" data-bs-toggle="tooltip" data-bs-title="Torek">TOR</label>
                   </div>
                 </div>
@@ -413,8 +434,15 @@
                 <div class="col-6 col-md-3">
                   <input type="hidden" name="sre" value="" disabled data-false-for="sre">
                   <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="sre" id="sre" value="1"
-                      data-original="<%= settings.sre ? '1' : '0' %>" <%= settings.sre ? "checked" : "" %> >
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      name="sre"
+                      id="sre"
+                      value="1"
+                      data-original="<%= settings.sre ? '1' : '0' %>"
+                      <%= settings.sre ? "checked" : "" %>
+                    >
                     <label class="form-check-label" for="sre" data-bs-toggle="tooltip" data-bs-title="Sreda">SRE</label>
                   </div>
                 </div>
@@ -422,8 +450,15 @@
                 <div class="col-6 col-md-3">
                   <input type="hidden" name="cet" value="" disabled data-false-for="cet">
                   <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="cet" id="cet" value="1"
-                      data-original="<%= settings.cet ? '1' : '0' %>" <%= settings.cet ? "checked" : "" %> >
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      name="cet"
+                      id="cet"
+                      value="1"
+                      data-original="<%= settings.cet ? '1' : '0' %>"
+                      <%= settings.cet ? "checked" : "" %>
+                    >
                     <label class="form-check-label" for="cet" data-bs-toggle="tooltip" data-bs-title="Četrtek">CET</label>
                   </div>
                 </div>
@@ -431,8 +466,15 @@
                 <div class="col-6 col-md-3">
                   <input type="hidden" name="pet" value="" disabled data-false-for="pet">
                   <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="pet" id="pet" value="1"
-                      data-original="<%= settings.pet ? '1' : '0' %>" <%= settings.pet ? "checked" : "" %> >
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      name="pet"
+                      id="pet"
+                      value="1"
+                      data-original="<%= settings.pet ? '1' : '0' %>"
+                      <%= settings.pet ? "checked" : "" %>
+                    >
                     <label class="form-check-label" for="pet" data-bs-toggle="tooltip" data-bs-title="Petek">PET</label>
                   </div>
                 </div>
@@ -440,8 +482,15 @@
                 <div class="col-6 col-md-3">
                   <input type="hidden" name="sob" value="" disabled data-false-for="sob">
                   <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="sob" id="sob" value="1"
-                      data-original="<%= settings.sob ? '1' : '0' %>" <%= settings.sob ? "checked" : "" %> >
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      name="sob"
+                      id="sob"
+                      value="1"
+                      data-original="<%= settings.sob ? '1' : '0' %>"
+                      <%= settings.sob ? "checked" : "" %>
+                    >
                     <label class="form-check-label" for="sob" data-bs-toggle="tooltip" data-bs-title="Sobota">SOB</label>
                   </div>
                 </div>
@@ -449,11 +498,18 @@
                 <div class="col-6 col-md-3">
                   <input type="hidden" name="ned" value="" disabled data-false-for="ned">
                   <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="ned" id="ned" value="1"
-                      data-original="<%= settings.ned ? '1' : '0' %>" <%= settings.ned ? "checked" : "" %> >
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      name="ned"
+                      id="ned"
+                      value="1"
+                      data-original="<%= settings.ned ? '1' : '0' %>"
+                      <%= settings.ned ? "checked" : "" %>
+                    >
                     <label class="form-check-label" for="ned" data-bs-toggle="tooltip" data-bs-title="Nedelja">NED</label>
                   </div>
-                </div```ejs
+                </div>
               </div>
 
               <!-- Shrani samo spremembe -->
@@ -480,6 +536,7 @@
     </div>
   </div>
 
+  <!-- Bootstrap JS bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
@@ -488,18 +545,32 @@
       if (!form) return;
 
       const toggle = document.getElementById('saveOnlyChanges');
+      const submitBtn = document.getElementById('submitBtn');
 
       // Tooltipi za dneve
       document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => {
         try { new bootstrap.Tooltip(el); } catch (e) {}
       });
 
-      form.addEventListener('submit', (e) => {
-        if (!toggle || !toggle.checked) return; // pošlji vse kot prej
+      function enableAllFields() {
+        form.querySelectorAll('input').forEach((el) => {
+          // device_id naj ostane enabled
+          if (el.type === 'hidden' && el.name === 'device_id') return;
 
+          // hidden "false" so privzeto disabled (upravljamo jih pri checkboxih)
+          if (el.type === 'hidden' && el.dataset.falseFor) {
+            el.disabled = true;
+            return;
+          }
+
+          el.disabled = false;
+        });
+      }
+
+      function prepareChangedOnly() {
         let changedCount = 0;
 
-        // privzeto onemogoči vse hidden "false" inpute
+        // privzeto onemogoči vse hidden "false"
         form.querySelectorAll('input[type="hidden"][data-false-for]').forEach((h) => {
           h.disabled = true;
         });
@@ -509,8 +580,6 @@
         inputs.forEach((el) => {
           if (!el.name) return;
           if (el.type === 'hidden' && el.name === 'device_id') return;
-
-          // hidden false obdelamo preko checkbox logike
           if (el.type === 'hidden' && el.dataset.falseFor) return;
 
           if (el.type === 'checkbox') {
@@ -545,7 +614,7 @@
             const current = (el.value ?? '');
 
             if (String(original) === String(current)) {
-              el.disabled = true;
+              el.disabled = true; // nespremenjeno -> ne validira se
             } else {
               changedCount++;
               el.disabled = false;
@@ -553,11 +622,31 @@
           }
         });
 
-        if (changedCount === 0) {
-          e.preventDefault();
-          alert('Ni sprememb za shraniti.');
-        }
-      });
+        return changedCount;
+      }
+
+      // Če izklopiš toggle, omogoči nazaj vsa polja
+      if (toggle) {
+        toggle.addEventListener('change', () => {
+          if (toggle.checked) return;
+          enableAllFields();
+        });
+      }
+
+      // Ključni fix: priprava na CLICK (pred HTML validacijo)
+      if (submitBtn) {
+        submitBtn.addEventListener('click', (e) => {
+          if (!toggle || !toggle.checked) return;
+
+          const changedCount = prepareChangedOnly();
+
+          if (changedCount === 0) {
+            e.preventDefault();
+            alert('Ni sprememb za shraniti.');
+            enableAllFields();
+          }
+        });
+      }
     })();
   </script>
 </body>
