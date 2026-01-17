@@ -12,7 +12,7 @@
   <h2>Nastavitve naprave in krmilnice</h2>
 
   <form action="/settings" method="POST" class="settings-form">
-
+    <input type="hidden" name="device_id" value="<%= settings.device_id %>">
     <fieldset>
       <legend><strong>Nastavitve naprave</strong></legend>
 
