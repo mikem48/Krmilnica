@@ -2,9 +2,13 @@ const express = require('express');
 const db = require('../database');
 const router = express.Router();
 
-// Stran za nastavitve naprave
+/**
+ * Stran za nastavitve naprave
+ * URL: /:id/settings
+ */
 router.get('/:id/settings', (req, res) => {
   if (!req.isAuthenticated()) return res.redirect('/login');
+
   const deviceId = req.params.id;
   console.log('Nastavitve za ID:', deviceId);
 
@@ -30,85 +34,199 @@ router.get('/:id/settings', (req, res) => {
     }
 
     // Dobite tudi najnovejšo verzijo firmware iz baze
-    db.get('SELECT * FROM firmware ORDER BY upload_date DESC LIMIT 1', [], (err, latestFirmware) => {
-      if (err) {
-        console.error('Napaka pri poizvedbi firmware:', err);
+    db.get('SELECT * FROM firmware ORDER BY upload_date DESC LIMIT 1', [], (fwErr, latestFirmware) => {
+      if (fwErr) {
+        console.error('Napaka pri poizvedbi firmware:', fwErr);
       }
-      res.render('device-settings', { device, latestFirmware: latestFirmware || null });
+
+      // Izračun online statusa (online, če je aktivna v zadnjih 5 minutah)
+      const now = Math.floor(Date.now() / 1000);
+      const lastUpdate = device.last_update || 0;
+      const isOnline = (now - lastUpdate) < 300;
+
+      const lastUpdateFormatted =
+        lastUpdate > 0 ? new Date(lastUpdate * 1000).toLocaleString('sl-SI') : 'Nikoli';
+
+      // Params iz baze
+      let params = {};
+      try {
+        params = device.params ? JSON.parse(device.params) : {};
+      } catch (e) {
+        console.error('Napaka pri JSON.parse(device.params):', e);
+        params = {};
+      }
+
+      // Objekt, ki ga uporablja device-settings.ejs
+      const settings = {
+        ...params,
+        device_id: device.id,
+        device_name: device.name,
+        value1: device.value1,
+        value2: device.value2,
+        online: isOnline,
+        last_update: lastUpdateFormatted
+      };
+
+      res.render('device-settings', {
+        settings,
+        latestFirmware: latestFirmware || null,
+        user: req.user // pomembno: da EJS navbar ne pade z "user is not defined"
+      });
     });
   });
 });
 
-// Posodobi parametre naprave
+/**
+ * Posodobi parametre naprave
+ * URL: /:id/settings
+ *
+ * Podpira "shrani samo spremembe":
+ * - če frontend pošlje samo spremenjena polja, se naredi merge z obstoječimi params
+ * - checkboxi so mapirani na boolean
+ */
 router.post('/:id/settings', (req, res) => {
   if (!req.isAuthenticated()) return res.redirect('/login');
-  const deviceId = req.params.id;
 
+  const deviceId = req.params.id;
   if (!/^[a-zA-Z0-9]{8}$/.test(deviceId)) {
     return res.send('Neveljaven ID naprave.');
   }
 
-  const paramsObj = {
-    ...req.body,
-    // Če checkbox nima vrednosti, bo false
-    enableAlerts: req.body.enableAlerts === 'true'
-  };
-  const params = JSON.stringify(paramsObj);
-
-  // Posodobitev samo če ima uporabnik dostop do naprave
-  const updateQuery = `
-    UPDATE devices
-    SET params = ?
-    WHERE id = ? AND id IN (
-      SELECT device_id FROM user_devices WHERE user_id = ?
-    )
+  // Preberi trenutne params z preverjanjem dostopa
+  const selectQuery = `
+    SELECT devices.params
+    FROM devices
+    JOIN user_devices ON devices.id = user_devices.device_id
+    WHERE devices.id = ? AND user_devices.user_id = ?
   `;
 
-  db.run(updateQuery, [params, deviceId, req.user.id], function(err) {
+  db.get(selectQuery, [deviceId, req.user.id], (err, row) => {
     if (err) {
-      console.error('Napaka pri posodabljanju nastavitev:', err);
-      return res.send('Napaka pri shranjevanju nastavitev.');
+      console.error('Napaka pri branju params:', err);
+      return res.send('Prišlo je do napake.');
     }
-    if (this.changes === 0) {
+    if (!row) {
       return res.send('Nimate dovoljenja za posodobitev te naprave.');
     }
-    res.redirect('/');
+
+    let currentParams = {};
+    try {
+      currentParams = row.params ? JSON.parse(row.params) : {};
+    } catch (e) {
+      console.error('Napaka pri JSON.parse(row.params):', e);
+      currentParams = {};
+    }
+
+    // Checkbox polja, ki jih imaš v napravi/krmilnici
+    const checkboxFields = new Set([
+      'casovnik2', 'pon', 'tor', 'sre', 'cet', 'pet', 'sob', 'ned'
+    ]);
+
+    // Merge samo prispelih polj (tako lahko shraniš samo spremembe)
+    const merged = { ...currentParams };
+
+    for (const [key, raw] of Object.entries(req.body)) {
+      if (key === 'device_id') continue; // id dobimo iz URL-ja
+
+      if (checkboxFields.has(key)) {
+        // Frontend pošilja:
+        // checked -> "1"
+        // unchecked (če spremenjeno) -> "" (hidden input)
+        merged[key] = raw === '1';
+        continue;
+      }
+
+      // ostala polja: poskusi pretvorit v number, sicer pusti string
+      if (raw === '') {
+        merged[key] = '';
+        continue;
+      }
+
+      const asNumber = Number(raw);
+      merged[key] = Number.isFinite(asNumber) && raw.trim() !== '' ? asNumber : raw;
+    }
+
+    const params = JSON.stringify(merged);
+
+    const updateQuery = `
+      UPDATE devices
+      SET params = ?
+      WHERE id = ? AND id IN (
+        SELECT device_id FROM user_devices WHERE user_id = ?
+      )
+    `;
+
+    db.run(updateQuery, [params, deviceId, req.user.id], function (updateErr) {
+      if (updateErr) {
+        console.error('Napaka pri posodabljanju nastavitev:', updateErr);
+        return res.send('Napaka pri shranjevanju nastavitev.');
+      }
+      if (this.changes === 0) {
+        return res.send('Nimate dovoljenja za posodobitev te naprave.');
+      }
+      res.redirect('/');
+    });
   });
 });
 
-// Sprejem podatkov iz ESP32
+/**
+ * Sprejem podatkov iz ESP32
+ * URL: /data
+ */
 router.post('/data', (req, res) => {
   const { deviceId, value1, value2 } = req.body;
+
   if (!deviceId || !/^[a-zA-Z0-9]{8}$/.test(deviceId)) {
     return res.status(400).send('Neveljaven ID naprave.');
   }
+
   const lastUpdate = Math.floor(Date.now() / 1000);
-  db.run('UPDATE devices SET value1 = ?, value2 = ?, last_update = ? WHERE id = ?', 
-         [value1, value2, lastUpdate, deviceId], (err) => {
-    if (err) {
-      console.error('Napaka pri posodabljanju vrednosti:', err);
-      return res.status(500).send('Napaka v bazi.');
+
+  db.run(
+    'UPDATE devices SET value1 = ?, value2 = ?, last_update = ? WHERE id = ?',
+    [value1, value2, lastUpdate, deviceId],
+    (err) => {
+      if (err) {
+        console.error('Napaka pri posodabljanju vrednosti:', err);
+        return res.status(500).send('Napaka v bazi.');
+      }
+      res.send('OK');
     }
-    res.send('OK');
-  });
+  );
 });
 
-// Branje parametrov za ESP32
+/**
+ * Branje parametrov za ESP32
+ * URL: /:id/params
+ */
 router.get('/:id/params', (req, res) => {
   const deviceId = req.params.id;
+
   if (!/^[a-zA-Z0-9]{8}$/.test(deviceId)) {
     return res.status(400).send('Neveljaven ID naprave.');
   }
+
   db.get('SELECT params FROM devices WHERE id = ?', [deviceId], (err, device) => {
     if (err || !device) {
       return res.status(404).send('Naprava ne obstaja.');
     }
-    const params = device.params ? JSON.parse(device.params) : {};
+
+    let params = {};
+    try {
+      params = device.params ? JSON.parse(device.params) : {};
+    } catch (e) {
+      console.error('Napaka pri JSON.parse(params) za napravo:', deviceId, e);
+      params = {};
+    }
+
     res.json(params);
   });
 });
 
-// Preveri, ali je na voljo posodobitev firmware (za ESP32)
+/**
+ * Preveri, ali je na voljo posodobitev firmware (za ESP32)
+ * URL: /:id/check-update?version=...
+ */
 router.get('/:id/check-update', (req, res) => {
   const deviceId = req.params.id;
   const currentVersion = req.query.version || 'krmilnica_01.01.24';
@@ -117,7 +235,7 @@ router.get('/:id/check-update', (req, res) => {
     return res.status(400).send('Neveljaven ID naprave.');
   }
 
-  // Posodobitev trenutne verzije v bazi naprave
+  // Posodobitev trenutne verzije v bazi naprave (brez auth kot prej)
   db.run('UPDATE devices SET firmware_version = ? WHERE id = ?', [currentVersion, deviceId]);
 
   db.get('SELECT * FROM firmware ORDER BY upload_date DESC LIMIT 1', [], (err, firmware) => {
@@ -129,7 +247,7 @@ router.get('/:id/check-update', (req, res) => {
     const parseVersion = (v) => {
       const m = v.match(/krmilnica_(\d{2})\.(\d{2})\.(\d{2})/);
       if (!m) return 0;
-      return parseInt(`20${m[3]}${m[2]}${m[1]}`);
+      return parseInt(`20${m[3]}${m[2]}${m[1]}`, 10);
     };
 
     const currentVerNum = parseVersion(currentVersion);
