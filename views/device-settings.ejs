@@ -3,142 +3,92 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ESP32 Dashboard</title>
+<title>Nastavitve naprave</title>
 <style>
-  /* Ozadje izlinearnega gradienta */
   body {
-    margin: 0;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
     background: linear-gradient(135deg, #6371c7 0%, #8059c7 100%);
-    min-height: 100vh;
     color: #222;
+    min-height: 100vh;
+    padding: 30px;
+    box-sizing: border-box;
   }
-
-  /* Zgornji navigation bar */
   header {
-    height: 56px;
-    background: #efeff5;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 24px;
-    box-shadow: 0 1px 4px rgb(0 0 0 / 0.1);
-  }
-  .logo {
-    font-weight: 700;
+    color: white;
     font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  header .icon-device {
+    font-size: 1.8rem;
+    user-select: none;
+  }
+  .settings-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px 28px 32px;
+    width: 340px;
+    box-shadow: 0 8px 25px rgb(0 0 0 / 0.15);
+    margin-bottom: 40px;
+  }
+  .settings-header {
+    background-color: #3671f3;
+    border-radius: 12px 12px 0 0;
+    font-weight: 600;
+    color: white;
+    font-size: 1.1rem;
+    padding: 14px 24px;
     display: flex;
     align-items: center;
     gap: 8px;
   }
-  .logo .icon-chip {
-    font-size: 1.5rem;
-    user-select: none;
-  }
-  nav {
-    display: flex;
-    gap: 26px;
+  .device-status {
+    margin-left: auto;
     font-weight: 600;
-    color: #555;
-  }
-  nav a {
+    color: #f44336;
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 1rem;
-    color: #555;
-    text-decoration: none;
-    cursor: pointer;
-  }
-  nav a:hover {
-    color: #3671f3;
-  }
-
-  main {
-    max-width: 960px;
-    margin: 40px auto 80px;
-    padding: 0 20px;
-  }
-
-  h2 {
-    font-weight: 600;
-    font-size: 1.6rem;
-    margin-bottom: 30px;
-    color: white;
-  }
-
-  /* Postavljanje področij */
-  .dashboard {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 40px;
-  }
-
-  /* Kartica naprave */
-  .device-card {
-    background: white;
-    border-radius: 14px;
-    box-shadow: 0 8px 22px rgba(0,0,0,0.15);
-    width: 280px;
-    overflow: hidden;
-    color: #222;
-    font-size: 0.95rem;
-  }
-  .device-header {
-    background-color: #3671f3;
-    color: white;
-    padding: 12px 20px;
-    font-weight: 600;
-    font-size: 1.1rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     user-select: none;
-  }
-  .device-header .icon-device {
-    margin-right: 8px;
-    font-size: 1.3rem;
-  }
-  .device-status {
-    display: flex;
-    align-items: center;
-    color: #f44336;
-    font-weight: 600;
   }
   .status-dot {
     width: 14px;
     height: 14px;
     background-color: #f44336;
     border-radius: 50%;
-    margin-right: 8px;
   }
-  .device-content {
-    padding: 20px 24px 28px;
+  .settings-content {
+    padding: 24px 16px 0 16px;
+    font-size: 0.93rem;
   }
-  .device-content b {
+  .settings-content b {
     font-weight: 700;
   }
-  .device-content em {
+  .settings-content em {
     font-style: italic;
     color: #666;
-    font-size: 0.87rem;
-    margin-top: 14px;
     display: block;
+    margin: 14px 0 0;
+    font-size: 0.85rem;
   }
   .btn-settings {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    background-color: #007aff;
-    color: white;
-    border:none;
+    margin-top: 24px;
+    padding: 11px 24px;
     border-radius: 30px;
+    background-color: #007aff;
+    border: none;
+    color: white;
     font-weight: 600;
     font-size: 0.95rem;
     cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0,122,255,0.5);
-    margin-top: 22px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 5px 12px rgba(0,122,255,0.5);
     user-select: none;
     text-decoration: none;
   }
@@ -146,158 +96,241 @@
     background-color: #005bb5;
   }
   .icon-gear {
-    font-size: 1.2rem;
+    font-size: 1.25rem;
     user-select: none;
   }
-
-  /* Obrazec za dodajanje nove naprave */
-  .add-device-section {
-    flex: 1 1 0;
+  form.settings-form {
+    width: 340px;
     background: white;
-    border-radius: 20px;
-    padding: 36px 40px;
+    border-radius: 16px;
+    padding: 28px 32px;
     box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-    min-width: 350px;
+    font-size: 0.92rem;
   }
-  .add-device-section h3 {
-    margin-top: 0;
-    margin-bottom: 36px;
+  form label {
+    display: block;
     font-weight: 600;
-    font-size: 1.8rem;
-    color: #222;
+    margin-bottom: 6px;
   }
-  form.add-device {
-    display: flex;
-    align-items: flex-end;
-    gap: 28px;
-    flex-wrap: wrap;
-  }
-  form.add-device > div {
-    flex: 1 1 280px;
-    min-width: 240px;
-    display: flex;
-    flex-direction: column;
-  }
-  form.add-device label {
-    margin-bottom: 8px;
-    font-weight: 600;
+  form input[type=number],
+  form input[type=tel] {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1.8px solid #ddd;
+    margin-bottom: 18px;
     font-size: 1rem;
+    color: #333;
+    box-sizing: border-box;
   }
-  
-  form.add-device input[type="text"] {
-    font-size: 1.1rem;
-    padding: 14px 16px;
-    border: 2px solid #ddd;
-    border-radius: 14px;
-    transition: border-color 0.25s ease;
-    color: #444;
-  }
-  form.add-device input[type="text"]:focus {
+  form input[type=number]:focus,
+  form input[type=tel]:focus {
     outline: none;
     border-color: #3671f3;
     background-color: #e9f2ff;
   }
-  .small-text {
-    font-size: 0.82rem;
-    color: #666;
-    margin-top: 6px;
+  /* Inline skupine za manjše število inputov na isti vrstici */
+  .inline-inputs {
+    display: flex;
+    gap: 12px;
   }
-  form.add-device button {
-    background-color: #2e7d32;
-    color: white;
+  .inline-inputs > input {
+    flex: 1 1 0;
+    margin-bottom: 18px;
+  }
+  .btn-group {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 10px;
+  }
+  form button {
+    flex: 1;
+    padding: 14px 0;
     font-weight: 700;
-    font-size: 1.1rem;
+    border-radius: 28px;
     border: none;
-    border-radius: 34px;
-    padding: 14px 44px;
     cursor: pointer;
-    box-shadow: 0 6px 18px rgba(46,125,50,0.4);
+    font-size: 1rem;
     user-select: none;
-    white-space: nowrap;
-    flex-grow: 0;
   }
-  form.add-device button:hover {
-    background-color: #1b4d1b;
+  button.submit-btn {
+    background-color: #007aff;
+    color: white;
+    box-shadow: 0 5px 15px rgba(0,122,255,0.5);
+    transition: background-color 0.3s ease;
   }
-
-  /* Ikone */
-  .icon-device::before {
-    content: "\1F4BB";
-    margin-right: 8px;
+  button.submit-btn:hover {
+    background-color: #005bb5;
   }
-  .icon-gear::before {
-    content: "\2699";
+  button.cancel-btn {
+    background-color: #ddd;
+    color: #444;
   }
-
-  /* Responsive */
-  @media (max-width: 780px) {
-    main {
-      margin: 30px 20px 60px;
-    }
-    .dashboard {
-      flex-direction: column;
-      gap: 40px;
-    }
-    .device-card, 
-    .add-device-section {
-      width: 100% !important;
-      min-width: unset !important;
-    }
-    form.add-device {
-      flex-direction: column;
-      gap: 20px;
-    }
-    form.add-device > div {
-      min-width: 100%;
-    }
+  button.cancel-btn:hover {
+    background-color: #bbb;
   }
+  
+  /* Sekcija za Nastavitve krmilnice */
+  .controller-section {
+    width: 340px;
+    background: white;
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-top: 36px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    font-size: 0.92rem;
+  }
+  .controller-section h3 {
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 24px;
+    font-size: 1.15rem;
+  }
+  .controller-section label {
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .controller-section .inline-inputs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .controller-section .inline-inputs > input {
+    flex: 1 1 0;
+  }
+  .controller-section input[type=number] {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1.8px solid #ddd;
+    width: 100%;
+    font-size: 1rem;
+    color: #333;
+  }
+  .controller-section input[type=number]:focus {
+    outline: none;
+    border-color: #3671f3;
+    background-color: #e9f2ff;
+  }
+  .controller-section input[type=checkbox] {
+    margin-right: 7px;
+    transform: scale(1.1);
+    vertical-align: middle;
+  }
+  .controller-section .days {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 24px;
+  }
+  .controller-section .days label {
+    font-weight: normal;
+    cursor: pointer;
+    user-select: none;
+  }
+  
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo"><span class="icon-chip">🖥️</span>ESP32 Dashboard</div>
-  <nav>
-    <a href="#">Domov</a>
-    <a href="#">Admin Panel</a>
-    <a href="#">Odjava</a>
-  </nav>
+  <span class="icon-device">🛠️</span>
+  <span>ESP32 Nastavitve naprave</span>
 </header>
 
-<main>
-  <h2>Moje naprave</h2>
-  <div class="dashboard">
-    <section class="device-card">
-      <div class="device-header">
-        <span><span class="icon-device"></span> krmilnica1</span>
-        <span class="device-status"><span class="status-dot"></span>Offline</span>
-      </div>
-      <div class="device-content">
-        ID: ABCDEFGH<br />
-        <b>Vrednost 1:</b> 25.30<br />
-        <b>Vrednost 2:</b> 62.50<br />
-        <em>Zadnja posodobitev: 16. 1. 2026, 22:34:02</em>
-        <a href="#" class="btn-settings"><span class="icon-gear"></span> Nastavitve</a>
-      </div>
-    </section>
-
-    <section class="add-device-section">
-      <h3>Dodaj novo napravo</h3>
-      <form class="add-device" action="#" method="POST" novalidate>
-        <div>
-          <label for="device-name">Ime naprave</label>
-          <input id="device-name" name="device-name" type="text" placeholder="npr. Dnevna soba" required />
-        </div>
-        <div>
-          <label for="device-id">ID naprave (8 znakov)</label>
-          <input id="device-id" name="device-id" type="text" maxlength="8" minlength="8" placeholder="npr. ABCD1234" pattern="[A-Za-z0-9]{8}" required />
-          <div class="small-text">Natančno 8 alfanumeričnih znakov</div>
-        </div>
-        <button type="submit">+ Dodaj</button>
-      </form>
-    </section>
+<!-- Obstoječa kartica naprave -->
+<section class="settings-card">
+  <div class="settings-header">
+    <span>krmilnica1</span>
+    <span class="device-status"><span class="status-dot"></span>Offline</span>
   </div>
-</main>
+  <div class="settings-content">
+    ID: ABCDEFGH<br>
+    <b>Vrednost 1:</b> 25.30<br>
+    <b>Vrednost 2:</b> 62.50<br>
+    <em>Zadnja posodobitev: 16. 1. 2026, 22:34:02</em>
+    <a href="#" class="btn-settings"><span class="icon-gear">⚙️</span> Nastavitve</a>
+  </div>
+</section>
+
+<!-- Forma za osnovne nastavitve naprave -->
+<form class="settings-form" action="/submit-settings" method="GET" novalidate>
+  <label>Ura</label>
+  <div class="inline-inputs">
+    <input type="number" name="ura_h" min="0" max="23" value="15" required placeholder="hh" />
+    <input type="number" name="ura_min" min="0" max="59" value="38" required placeholder="mm" />
+  </div>
+
+  <label>Datum</label>
+  <div class="inline-inputs">
+    <input type="number" name="datum_dan" min="1" max="31" value="7" required placeholder="dd" />
+    <input type="number" name="datum_mesec" min="1" max="12" value="1" required placeholder="mm" />
+    <input type="number" name="datum_leto" min="2023" max="2100" value="2025" required placeholder="yyyy" />
+  </div>
+
+  <label>Višina (cm)</label>
+  <input type="number" step="0.01" name="visina" value="100.00" required />
+
+  <label>Wifi čas (s)</label>
+  <input type="number" name="wifi_cas" min="0" value="30" required />
+
+  <label>Obvestilo napetost (V)</label>
+  <input type="number" step="0.01" name="obvestilo_napetost" value="11.00" required />
+
+  <label>Obvestilo krmilo (%)</label>
+  <input type="number" name="obvestilo_krmilo" min="0" max="100" value="20" required />
+
+  <label>Obvestilo številka</label>
+  <input type="tel" name="obvestilo_stevilka" value="+38631280019" pattern="^\+?\d{7,15}$" title="Vnesite veljavno telefonsko številko" required />
+
+  <div class="btn-group">
+    <button type="submit" class="submit-btn">Potrdi</button>
+    <button type="button" class="cancel-btn" onclick="window.history.back();">Nazaj</button>
+  </div>
+</form>
+
+<!-- Forma za nastavitve krmilnice -->
+<section class="controller-section">
+  <h3>Nastavitve krmilnice</h3>
+  
+  <form action="/submit-timer" method="GET" novalidate>
+    <label>Ura 1</label>
+    <div class="inline-inputs">
+      <input type="number" name="ura1_h" min="0" max="23" value="15" required placeholder="hh" />
+      <input type="number" name="ura1_min" min="0" max="59" value="40" required placeholder="mm" />
+    </div>
+
+    <label>Ura 2</label>
+    <div class="inline-inputs" style="align-items:center;">
+      <input type="number" name="ura2_h" min="0" max="23" value="16" required placeholder="hh" />
+      <input type="number" name="ura2_min" min="0" max="59" value="50" required placeholder="mm" />
+      <input type="checkbox" name="casovnik_2" id="casovnik_2" checked />
+      <label for="casovnik_2" style="margin:0; cursor:pointer; font-weight:600;">časovnik 2</label>
+    </div>
+
+    <label>Čas delovanja (s)</label>
+    <input type="number" name="cas_delovanja" min="0" value="20" required />
+
+    <label>Hitrost motorja (%)</label>
+    <input type="number" name="hitrost_motorja" min="0" max="100" value="100" required />
+
+    <label>Dnevi v tednu</label>
+    <div class="days">
+      <label><input type="checkbox" name="dni[]" value="PON" checked /> PON</label>
+      <label><input type="checkbox" name="dni[]" value="TOR" checked /> TOR</label>
+      <label><input type="checkbox" name="dni[]" value="SRE" checked /> SRE</label>
+      <label><input type="checkbox" name="dni[]" value="CET" checked /> ČET</label>
+      <label><input type="checkbox" name="dni[]" value="PET" checked /> PET</label>
+      <label><input type="checkbox" name="dni[]" value="SOB" checked /> SOB</label>
+      <label><input type="checkbox" name="dni[]" value="NED" checked /> NED</label>
+    </div>
+
+    <div class="btn-group">
+      <button type="submit" class="submit-btn">Potrdi</button>
+    </div>
+  </form>
+</section>
 
 </body>
 </html>
