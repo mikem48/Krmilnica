@@ -128,7 +128,7 @@
           const now = Math.floor(Date.now() / 1000);
           const lastUpdate = device.last_update || 0;
           const timeDiff = now - lastUpdate;
-          const isOnline = timeDiff < 300; // naprava online, če je bila aktivna v zadnjih 5 minutah
+          const isOnline = timeDiff < 43200; // naprava online, če je bila aktivna v zadnjih 5 minutah
 
           const lastUpdateFormatted = lastUpdate > 0 
             ? new Date(lastUpdate*1000).toLocaleString('sl-SI')
@@ -175,7 +175,7 @@
         <div class="row g-3 align-items-center">
           <div class="col-md-6">
             <label for="name" class="form-label">Ime naprave</label>
-            <input type="text" id="name" name="name" class="form-control" placeholder="npr. Dnevna soba" required />
+            <input type="text" id="name" name="name" class="form-control" placeholder="npr. Krmilnica 1" required />
           </div>
           <div class="col-md-4">
             <label for="deviceId" class="form-label">ID naprave (8 znakov)</label>
