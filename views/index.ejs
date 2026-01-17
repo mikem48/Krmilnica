@@ -128,7 +128,7 @@
           const now = Math.floor(Date.now() / 1000);
           const lastUpdate = device.last_update || 0;
           const timeDiff = now - lastUpdate;
-          const isOnline = timeDiff < 43200; // naprava online, če je bila aktivna v zadnjih 5 minutah
+          const isOnline = timeDiff < 300; // naprava online, če je bila aktivna v zadnjih 5 minutah
 
           const lastUpdateFormatted = lastUpdate > 0 
             ? new Date(lastUpdate*1000).toLocaleString('sl-SI')
