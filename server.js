@@ -7,7 +7,9 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const db = require('./database');
+const settingsRouter = require('./routes/settings');
 
+app.use('/', settingsRouter);
 // Ustvari mapo za firmware
 if (!fs.existsSync('./firmware')) {
   fs.mkdirSync('./firmware');
