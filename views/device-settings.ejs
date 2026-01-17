@@ -4,259 +4,423 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Nastavitve naprave in krmilnice</title>
+
   <link rel="stylesheet" href="/styles.css" />
+
+  <!-- Če FontAwesome na drugih straneh ni globalno vključen, pusti to noter -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+
+  <!-- Minimalen, “scoped” CSS samo za to stran (da ne povozi ostalih) -->
+  <style>
+    .page--device-settings .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 28px 0 18px;
+    }
+
+    .page--device-settings .page-title {
+      margin: 0;
+      font-size: 1.6rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .page--device-settings .page-subtitle {
+      margin: 6px 0 0;
+      color: #555;
+      font-size: 0.95rem;
+    }
+
+    .page--device-settings .layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    @media (max-width: 920px) {
+      .page--device-settings .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Card – če že imaš globalne .card stile, bo to samo “soft override” */
+    .page--device-settings .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 22px rgba(66, 89, 135, 0.12);
+      overflow: hidden;
+    }
+
+    .page--device-settings .card__header {
+      padding: 14px 18px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .page--device-settings .card__title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .page--device-settings .card__body {
+      padding: 16px 18px 18px;
+    }
+
+    .page--device-settings .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #eee;
+      background: #fafafa;
+      white-space: nowrap;
+    }
+
+    .page--device-settings .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .page--device-settings .status--online .status-dot { background: #22c55e; }
+    .page--device-settings .status--online { color: #166534; border-color: rgba(34, 197, 94, 0.25); background: rgba(34, 197, 94, 0.08); }
+
+    .page--device-settings .status--offline .status-dot { background: #ef4444; }
+    .page--device-settings .status--offline { color: #7f1d1d; border-color: rgba(239, 68, 68, 0.25); background: rgba(239, 68, 68, 0.08); }
+
+    .page--device-settings .meta {
+      display: grid;
+      gap: 8px;
+      font-size: 0.95rem;
+      color: #222;
+    }
+
+    .page--device-settings .muted {
+      color: #666;
+      font-size: 0.85rem;
+      font-style: italic;
+      margin-top: 10px;
+    }
+
+    .page--device-settings .form-card h3 {
+      margin: 0 0 12px;
+      font-size: 1.05rem;
+    }
+
+    .page--device-settings .section-sep {
+      margin: 18px 0;
+      border: none;
+      border-top: 1px solid #eee;
+    }
+
+    .page--device-settings .inline-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .page--device-settings .inline-group input[type="number"] {
+      max-width: 140px;
+    }
+
+    /* Ne vsiljujemo novih stilov za inpute/gumbe, ker jih verjetno že imaš v styles.css.
+       Če jih nimaš, bo browser fallback. */
+    .page--device-settings label {
+      display: block;
+      margin: 12px 0 6px;
+      font-weight: 600;
+    }
+
+    .page--device-settings .form-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+      align-items: center;
+    }
+  </style>
 </head>
-<body>
 
-<style>
-  body {
-    background: linear-gradient(120deg, #6370ff 0%, #835ffb 100%);
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    min-height: 100vh;
-    color: #222;
-  }
+<body class="page page--device-settings">
+  <div class="container">
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Nastavitve naprave in krmilnice</h1>
+        <p class="page-subtitle">
+          Uredi parametre naprave <b><%= settings.device_name || 'krmilnica1' %></b> in krmilnice.
+        </p>
+      </div>
 
-  .container {
-    max-width: 900px;
-    margin: 40px auto 80px;
-    padding: 0 28px;
-  }
+      <!-- ohranimo element "Nazaj", samo prestavimo ga v header -->
+      <a href="/" class="btn-secondary">Nazaj</a>
+    </header>
 
-  h2 {
-    font-weight: 600;
-    font-size: 1.8rem;
-    margin-bottom: 24px;
-    color: #222;
-  }
+    <div class="layout">
+      <!-- LEVI STOLPEC: Povzetek naprave (ohranjen vsebinski del) -->
+      <aside class="card">
+        <div class="card__header">
+          <div class="card__title">
+            <i class="fas fa-microchip" aria-hidden="true"></i>
+            <span><%= settings.device_name || 'krmilnica1' %></span>
+          </div>
 
-  .device-card {
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 8px 22px rgba(66, 89, 135, 0.25);
-    max-width: 360px;
-    margin-bottom: 30px;
-    overflow: hidden;
-  }
+          <span class="status-chip <%= settings.online ? 'status--online' : 'status--offline' %>">
+            <span class="status-dot" aria-hidden="true"></span>
+            <%= settings.online ? 'Online' : 'Offline' %>
+          </span>
+        </div>
 
-  .device-card-header {
-    background-color: #4365ff;
-    color: white;
-    padding: 14px 20px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+        <div class="card__body">
+          <div class="meta">
+            <div>ID: <%= settings.device_id || 'ABCDEFGH' %></div>
+            <div><b>Vrednost 1:</b> <%= settings.value1 != null ? settings.value1 : '25.30' %></div>
+            <div><b>Vrednost 2:</b> <%= settings.value2 != null ? settings.value2 : '62.50' %></div>
+          </div>
 
-  .status-indicator {
-    display: flex;
-    align-items: center;
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: #ff3c3c;
-  }
+          <div class="muted">
+            Zadnja posodobitev: <%= settings.last_update || '16. 1. 2026, 22:34:02' %>
+          </div>
 
-  .status-indicator::before {
-    content: '';
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    background-color: #ff3c3c;
-    border-radius: 50%;
-    margin-right: 6px;
-  }
+          <div class="form-actions">
+            <!-- ohranjen gumb (isti element, isti onclick) -->
+            <button
+              class="btn-primary"
+              type="button"
+              onclick="location.href='/device-settings?device_id=<%= settings.device_id %>'"
+            >
+              <i class="fas fa-cog" aria-hidden="true"></i>
+              Nastavitve
+            </button>
+          </div>
+        </div>
+      </aside>
 
-  .device-card-body {
-    padding: 20px;
-    font-size: 0.95rem;
-    line-height: 1.5;
-  }
+      <!-- DESNI STOLPEC: Forma (ohranimo VSE elemente in name atribute) -->
+      <section class="card form-card">
+        <div class="card__header">
+          <h2 class="card__title" style="margin:0; font-size: 1.05rem;">
+            Parametri naprave
+          </h2>
+        </div>
 
-  .device-card-body b {
-    font-weight: 700;
-  }
+        <div class="card__body">
+          <form action="/settings" method="POST" class="settings-card">
+            <input type="hidden" name="device_id" value="<%= settings.device_id %>">
 
-  .device-card-update {
-    margin-top: 12px;
-    font-size: 0.85rem;
-    font-style: italic;
-    color: #555;
-  }
+            <label>Ura in minuta:</label>
+            <div class="inline-group">
+              <input
+                type="number"
+                name="ura_h"
+                min="0"
+                max="23"
+                placeholder="<%= settings.ura_h || '18' %>"
+                value="<%= settings.ura_h || '' %>"
+                required
+              >
+              <span>:</span>
+              <input
+                type="number"
+                name="ura_min"
+                min="0"
+                max="59"
+                placeholder="<%= settings.ura_min || '44' %>"
+                value="<%= settings.ura_min || '' %>"
+                required
+              >
+            </div>
 
-  button.btn-primary {
-    background-color: #1e6ef2;
-    color: white;
-    border: none;
-    padding: 10px 22px;
-    font-size: 1rem;
-    font-weight: 600;
-    border-radius: 25px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: background-color 0.3s ease;
-    box-shadow: 0 4px 8px rgba(30, 110, 242, 0.4);
-  }
+            <label>Datum (dan, mesec, leto):</label>
+            <div class="inline-group">
+              <input
+                type="number"
+                name="datum_dan"
+                min="1"
+                max="31"
+                placeholder="<%= settings.datum_dan || '17' %>"
+                value="<%= settings.datum_dan || '' %>"
+                required
+              >
+              <input
+                type="number"
+                name="datum_mesec"
+                min="1"
+                max="12"
+                placeholder="<%= settings.datum_mesec || '01' %>"
+                value="<%= settings.datum_mesec || '' %>"
+                required
+              >
+              <input
+                type="number"
+                name="datum_leto"
+                min="2020"
+                max="2100"
+                placeholder="<%= settings.datum_leto || '2026' %>"
+                value="<%= settings.datum_leto || '' %>"
+                required
+              >
+            </div>
 
-  button.btn-primary:hover {
-    background-color: #155bb5;
-  }
+            <label>Višina (cm):</label>
+            <input
+              type="number"
+              step="0.01"
+              name="visina"
+              placeholder="<%= settings.visina || '100.00' %>"
+              value="<%= settings.visina || '' %>"
+              required
+            >
 
-  .add-device-section {
-    background: white;
-    border-radius: 16px;
-    padding: 25px 30px;
-    box-shadow: 0 8px 22px rgba(66, 89, 135, 0.1);
-    max-width: 900px;
-    margin-top: 40px;
-  }
+            <label>Wifi čas (s):</label>
+            <input
+              type="number"
+              name="wifi_cas"
+              placeholder="<%= settings.wifi_cas || '60' %>"
+              value="<%= settings.wifi_cas || '' %>"
+              required
+            >
 
-  .form-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    align-items: flex-start;
-  }
+            <label>Obvestilo napetost (V):</label>
+            <input
+              type="number"
+              step="0.01"
+              name="obvestilo_napetost"
+              placeholder="<%= settings.obvestilo_napetost || '12.50' %>"
+              value="<%= settings.obvestilo_napetost || '' %>"
+              required
+            >
 
-  input[type="text"], input[type="number"] {
-    flex-grow: 1;
-    min-width: 250px;
-    padding: 10px 18px;
-    border: 1.5px solid #aac7fc;
-    border-radius: 12px;
-    font-size: 1rem;
-    transition: border-color 0.25s ease;
-  }
+            <label>Obvestilo krmilo (%):</label>
+            <input
+              type="number"
+              name="obvestilo_krmilo"
+              placeholder="<%= settings.obvestilo_krmilo || '80' %>"
+              value="<%= settings.obvestilo_krmilo || '' %>"
+              required
+            >
 
-  input[type="text"]:focus, input[type="number"]:focus {
-    outline: none;
-    border-color: #4365ff;
-    box-shadow: 0 0 10px rgba(67, 101, 255, 0.5);
-  }
+            <label>Obvestilo številka:</label>
+            <input
+              type="text"
+              name="obvestilo_stevilka"
+              placeholder="<%= settings.obvestilo_stevilka || '+38631280019' %>"
+              value="<%= settings.obvestilo_stevilka || '' %>"
+              required
+            >
 
-  .input-helper {
-    color: #6b6b6b;
-    font-size: 0.8rem;
-    margin-top: 3px;
-  }
+            <hr class="section-sep">
 
-  .btn-add-device {
-    background-color: #298a43;
-    color: white;
-    border: none;
-    border-radius: 25px;
-    padding: 12px 36px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    min-width: 140px;
-    flex-shrink: 0;
-  }
+            <h3>Krmilnica</h3>
+            <p><b>Časovnika: </b><%= settings.casovnika_on ? "On" : "Off" %></p>
 
-  .btn-add-device:hover {
-    background-color: #1f6f33;
-  }
-</style>
+            <label>Ura 1 in minuta:</label>
+            <div class="inline-group">
+              <input
+                type="number"
+                name="ura1_h"
+                min="0"
+                max="23"
+                placeholder="<%= settings.ura1_h || '08' %>"
+                value="<%= settings.ura1_h || '' %>"
+                required
+              >
+              <span>:</span>
+              <input
+                type="number"
+                name="ura1_min"
+                min="0"
+                max="59"
+                placeholder="<%= settings.ura1_min || '30' %>"
+                value="<%= settings.ura1_min || '' %>"
+                required
+              >
+            </div>
 
-<div class="container">
+            <label>Ura 2 in minuta:</label>
+            <div class="inline-group" style="align-items: center;">
+              <input
+                type="number"
+                name="ura2_h"
+                min="0"
+                max="23"
+                placeholder="<%= settings.ura2_h || '18' %>"
+                value="<%= settings.ura2_h || '' %>"
+              >
+              <span>:</span>
+              <input
+                type="number"
+                name="ura2_min"
+                min="0"
+                max="59"
+                placeholder="<%= settings.ura2_min || '45' %>"
+                value="<%= settings.ura2_min || '' %>"
+              >
 
-  <h2>Nastavitve naprave</h2>
+              <label style="font-weight: normal; margin: 0 0 0 10px; display: inline-flex; align-items: center; gap: 8px;">
+                <input type="checkbox" name="casovnik2" <%= settings.casovnik2 ? "checked" : "" %> >
+                časovnik 2
+              </label>
+            </div>
 
-  <div class="device-card">
-    <div class="device-card-header">
-      <span><i class="fas fa-microchip"></i> <%= settings.device_name || 'krmilnica1' %></span>
-      <span class="status-indicator"><%= settings.online ? 'Online' : 'Offline' %></span>
-    </div>
+            <label>Čas delovanja (s):</label>
+            <input
+              type="number"
+              name="cas_delovanja"
+              placeholder="<%= settings.cas_delovanja || '60' %>"
+              value="<%= settings.cas_delovanja || '' %>"
+              required
+            >
 
-    <div class="device-card-body">
-      <div>ID: <%= settings.device_id || 'ABCDEFGH' %></div>
-      <div><b>Vrednost 1:</b> <%= settings.value1 != null ? settings.value1 : '25.30' %></div>
-      <div><b>Vrednost 2:</b> <%= settings.value2 != null ? settings.value2 : '62.50' %></div>
-      <div class="device-card-update">Zadnja posodobitev: <%= settings.last_update || '16. 1. 2026, 22:34:02' %></div>
+            <label>Hitrost motorja (%):</label>
+            <input
+              type="number"
+              name="hitrost_motorja"
+              placeholder="<%= settings.hitrost_motorja || '75' %>"
+              value="<%= settings.hitrost_motorja || '' %>"
+              required
+            >
 
-      <button class="btn-primary" onclick="location.href='/device-settings?device_id=<%= settings.device_id %>'">
-        <i class="fas fa-cog"></i> Nastavitve
-      </button>
+            <label>Dnevi za vklop:</label>
+            <div class="checkbox-group" style="margin-bottom: 24px;">
+              <label><input type="checkbox" name="pon" <%= settings.pon ? "checked" : "" %> > PON</label>
+              <label><input type="checkbox" name="tor" <%= settings.tor ? "checked" : "" %> > TOR</label>
+              <label><input type="checkbox" name="sre" <%= settings.sre ? "checked" : "" %> > SRE</label>
+              <label><input type="checkbox" name="cet" <%= settings.cet ? "checked" : "" %> > CET</label>
+              <label><input type="checkbox" name="pet" <%= settings.pet ? "checked" : "" %> > PET</label>
+              <label><input type="checkbox" name="sob" <%= settings.sob ? "checked" : "" %> > SOB</label>
+              <label><input type="checkbox" name="ned" <%= settings.ned ? "checked" : "" %> > NED</label>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Shrani nastavitve</button>
+              <!-- element ohranjen (isti href in class) -->
+              <a href="/" class="btn-secondary">Nazaj</a>
+            </div>
+          </form>
+        </div>
+      </section>
     </div>
   </div>
-
-  <form action="/settings" method="POST" class="settings-card">
-
-    <input type="hidden" name="device_id" value="<%= settings.device_id %>">
-
-    <label>Ura in minuta:</label>
-    <div class="inline-group">
-      <input type="number" name="ura_h" min="0" max="23" placeholder="<%= settings.ura_h || '18' %>" value="<%= settings.ura_h || '' %>" required> :
-      <input type="number" name="ura_min" min="0" max="59" placeholder="<%= settings.ura_min || '44' %>" value="<%= settings.ura_min || '' %>" required>
-    </div>
-
-    <label>Datum (dan, mesec, leto):</label>
-    <div class="inline-group">
-      <input type="number" name="datum_dan" min="1" max="31" placeholder="<%= settings.datum_dan || '17' %>" value="<%= settings.datum_dan || '' %>" required>
-      <input type="number" name="datum_mesec" min="1" max="12" placeholder="<%= settings.datum_mesec || '01' %>" value="<%= settings.datum_mesec || '' %>" required>
-      <input type="number" name="datum_leto" min="2020" max="2100" placeholder="<%= settings.datum_leto || '2026' %>" value="<%= settings.datum_leto || '' %>" required>
-    </div>
-
-    <label>Višina (cm):</label>
-    <input type="number" step="0.01" name="visina" placeholder="<%= settings.visina || '100.00' %>" value="<%= settings.visina || '' %>" required>
-
-    <label>Wifi čas (s):</label>
-    <input type="number" name="wifi_cas" placeholder="<%= settings.wifi_cas || '60' %>" value="<%= settings.wifi_cas || '' %>" required>
-
-    <label>Obvestilo napetost (V):</label>
-    <input type="number" step="0.01" name="obvestilo_napetost" placeholder="<%= settings.obvestilo_napetost || '12.50' %>" value="<%= settings.obvestilo_napetost || '' %>" required>
-
-    <label>Obvestilo krmilo (%):</label>
-    <input type="number" name="obvestilo_krmilo" placeholder="<%= settings.obvestilo_krmilo || '80' %>" value="<%= settings.obvestilo_krmilo || '' %>" required>
-
-    <label>Obvestilo številka:</label>
-    <input type="text" name="obvestilo_stevilka" placeholder="<%= settings.obvestilo_stevilka || '+38631280019' %>" value="<%= settings.obvestilo_stevilka || '' %>" required>
-
-    <hr style="margin: 24px 0; border: none; border-top: 1px solid #ddd;">
-
-    <h3>Krmilnica</h3>
-    <p><b>Časovnika: </b><%= settings.casovnika_on ? "On" : "Off" %></p>
-
-    <label>Ura 1 in minuta:</label>
-    <div class="inline-group">
-      <input type="number" name="ura1_h" min="0" max="23" placeholder="<%= settings.ura1_h || '08' %>" value="<%= settings.ura1_h || '' %>" required> :
-      <input type="number" name="ura1_min" min="0" max="59" placeholder="<%= settings.ura1_min || '30' %>" value="<%= settings.ura1_min || '' %>" required>
-    </div>
-
-    <label>Ura 2 in minuta:</label>
-    <div class="inline-group" style="align-items: center; gap: 12px;">
-      <input type="number" name="ura2_h" min="0" max="23" placeholder="<%= settings.ura2_h || '18' %>" value="<%= settings.ura2_h || '' %>"> :
-      <input type="number" name="ura2_min" min="0" max="59" placeholder="<%= settings.ura2_min || '45' %>" value="<%= settings.ura2_min || '' %>">
-      <label style="font-weight: normal; margin-left: 10px;">
-        <input type="checkbox" name="casovnik2" <%= settings.casovnik2 ? "checked" : "" %> > časovnik 2
-      </label>
-    </div>
-
-    <label>Čas delovanja (s):</label>
-    <input type="number" name="cas_delovanja" placeholder="<%= settings.cas_delovanja || '60' %>" value="<%= settings.cas_delovanja || '' %>" required>
-
-    <label>Hitrost motorja (%):</label>
-    <input type="number" name="hitrost_motorja" placeholder="<%= settings.hitrost_motorja || '75' %>" value="<%= settings.hitrost_motorja || '' %>" required>
-
-    <label>Dnevi za vklop:</label>
-    <div class="checkbox-group" style="margin-bottom: 32px;">
-      <label><input type="checkbox" name="pon" <%= settings.pon ? "checked" : "" %> > PON</label>
-      <label><input type="checkbox" name="tor" <%= settings.tor ? "checked" : "" %> > TOR</label>
-      <label><input type="checkbox" name="sre" <%= settings.sre ? "checked" : "" %> > SRE</label>
-      <label><input type="checkbox" name="cet" <%= settings.cet ? "checked" : "" %> > CET</label>
-      <label><input type="checkbox" name="pet" <%= settings.pet ? "checked" : "" %> > PET</label>
-      <label><input type="checkbox" name="sob" <%= settings.sob ? "checked" : "" %> > SOB</label>
-      <label><input type="checkbox" name="ned" <%= settings.ned ? "checked" : "" %> > NED</label>
-    </div>
-
-    <button type="submit" class="btn-primary">Shrani nastavitve</button>
-    <a href="/" class="btn-secondary">Nazaj</a>
-  </form>
-
-</div>
-
 </body>
 </html>
