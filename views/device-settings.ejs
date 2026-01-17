@@ -1,101 +1,156 @@
 <!DOCTYPE html>
 <html lang="sl">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Device Settings</title>
-<style>
-  body { font-family: Arial, sans-serif; margin: 20px; }
-  label { display: inline-block; width: 150px; margin-bottom: 8px; }
-  input[type="text"], input[type="number"] { width: 80px; padding: 4px; }
-  input[type="checkbox"] { margin-left: 5px; }
-  .section { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #ccc; }
-  button { margin-top: 10px; margin-right: 8px; padding: 6px 12px; background-color: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer; }
-  button:hover { background-color: #0056b3; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Device Settings</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 16px;
+      background: #fff;
+      color: #000;
+    }
+
+    h3 {
+      font-weight: bold;
+    }
+
+    label {
+      display: inline-block;
+      min-width: 130px;
+      margin-bottom: 8px;
+    }
+
+    input[type="number"],
+    input[type="text"],
+    input[type="tel"] {
+      width: 70px;
+      padding: 4px 6px;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+    }
+
+    input[type="checkbox"] {
+      transform: scale(1.1);
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    button {
+      margin-top: 12px;
+      margin-right: 8px;
+      background-color: #007bff;
+      border: none;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 12px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+
+    button:active {
+      background-color: #0056b3;
+    }
+
+    .days label {
+      display: block;
+      margin-left: 0;
+      font-weight: normal;
+    }
+
+    .form-section {
+      margin-bottom: 32px;
+    }
+  </style>
 </head>
 <body>
 
-<h2>Nastavitve naprave (Device Settings)</h2>
+  <!-- Prva stran - Nastavitve -->
+  <div class="form-section">
+    <form action="/submit-settings" method="POST">
+      <h3>Nastavitve</h3>
 
-<form action="/submit-settings" method="POST">
+      <label>Ura:</label>
+      <input type="number" name="ura_h" min="0" max="23" value="15" /> h :
+      <input type="number" name="ura_min" min="0" max="59" value="38" /> min
+      <br />
 
-  <div class="section">
-    <h3>Osnovne nastavitve</h3>
-    <label for="ura_h">Ura:</label>
-    <input id="ura_h" name="ura_h" type="number" min="0" max="23" value="15" /> h :
-    <input id="ura_min" name="ura_min" type="number" min="0" max="59" value="38" /> min
-    <br />
+      <label>Datum:</label>
+      <input type="number" name="datum_dan" min="1" max="31" value="7" /> .
+      <input type="number" name="datum_mesec" min="1" max="12" value="1" /> .
+      <input type="number" name="datum_leto" min="2023" max="2100" value="2025" />
+      <br />
 
-    <label for="datum_dan">Datum:</label>
-    <input id="datum_dan" name="datum_dan" type="number" min="1" max="31" value="7" /> .
-    <input id="datum_mesec" name="datum_mesec" type="number" min="1" max="12" value="1" /> .
-    <input id="datum_leto" name="datum_leto" type="number" min="2023" max="2100" value="2025" />
-    <br />
+      <label>Visina:</label>
+      <input type="number" name="visina" step="0.01" value="100.00" /> cm
+      <br />
 
-    <label for="visina">Višina:</label>
-    <input id="visina" name="visina" type="number" min="0" step="0.01" value="100.00" /> cm
-    <br />
+      <label>Wifi čas:</label>
+      <input type="number" name="wifi_cas" value="30" /> s
+      <br />
 
-    <label for="wifi_cas">Wifi čas:</label>
-    <input id="wifi_cas" name="wifi_cas" type="number" min="0" value="30" /> s
-    <br />
+      <label>Obvestilo napetost:</label>
+      <input type="number" name="obvestilo_napetost" step="0.01" value="11.00" /> V
+      <br />
 
-    <label for="napetost">Obvestilo napetost:</label>
-    <input id="napetost" name="napetost" type="number" step="0.01" value="11.00" /> V
-    <br />
+      <label>Obvestilo krmilo:</label>
+      <input type="number" name="obvestilo_krmilo" min="0" max="100" value="20" /> %
+      <br />
 
-    <label for="krmilo">Obvestilo krmilo:</label>
-    <input id="krmilo" name="krmilo" type="number" min="0" max="100" value="20" /> %
-    <br />
+      <label>Obvestilo številka:</label>
+      <input type="tel" name="obvestilo_stevilka" value="+38631280019" />
+      <br />
 
-    <label for="obvestilo_stevilka">Obvestilo številka:</label>
-    <input id="obvestilo_stevilka" name="obvestilo_stevilka" type="tel" placeholder="+38631280019" value="+38631280019" />
+      <button type="submit">Potrdi</button>
+      <button type="button" onclick="window.history.back();">Nazaj</button>
+    </form>
   </div>
 
-  <div class="section">
-    <h3>Časovnik in motor</h3>
-    <label>Status časovnika:</label>
-    <span>On</span>
-    <br />
+  <!-- Druga stran - Krmilnica -->
+  <div class="form-section">
+    <form action="/submit-timer" method="POST">
+      <h3>Krmilnica</h3>
+      <p>Casovnika on</p>
 
-    <label for="ura1_h">Ura 1:</label>
-    <input id="ura1_h" name="ura1_h" type="number" min="0" max="23" value="15" /> h :
-    <input id="ura1_min" name="ura1_min" type="number" min="0" max="59" value="40" /> min
-    <br />
+      <label>Ura 1:</label>
+      <input type="number" name="ura1_h" min="0" max="23" value="15" /> h :
+      <input type="number" name="ura1_min" min="0" max="59" value="40" /> min
+      <br />
 
-    <label for="ura2_h">Ura 2:</label>
-    <input id="ura2_h" name="ura2_h" type="number" min="0" max="23" value="16" /> h :
-    <input id="ura2_min" name="ura2_min" type="number" min="0" max="59" value="50" /> min
-    <input id="casovnik_2" name="casovnik_2" type="checkbox" checked /> časovnik 2
-    <br />
+      <label>Ura 2:</label>
+      <input type="number" name="ura2_h" min="0" max="23" value="16" /> h :
+      <input type="number" name="ura2_min" min="0" max="59" value="50" /> min
+      <input type="checkbox" name="casovnik_2" checked /> casovnik 2
+      <br />
 
-    <label for="cas_delovanja">Čas delovanja:</label>
-    <input id="cas_delovanja" name="cas_delovanja" type="number" min="0" value="20" /> s
-    <br />
+      <label>Čas delovanja:</label>
+      <input type="number" name="cas_delovanja" value="20" /> s
+      <br />
 
-    <label for="hitrost_motorja">Hitrost motorja:</label>
-    <input id="hitrost_motorja" name="hitrost_motorja" type="number" min="0" max="100" value="100" /> %
-    <br />
+      <label>Hitrost motorja:</label>
+      <input type="number" name="hitrost_motorja" min="0" max="100" value="100" /> %
+      <br />
 
-    <label>Dnevi:</label>
-    <label><input type="checkbox" name="dni[]" value="PON" checked /> PON</label>
-    <label><input type="checkbox" name="dni[]" value="TOR" checked /> TOR</label>
-    <label><input type="checkbox" name="dni[]" value="SRE" checked /> SRE</label>
-    <label><input type="checkbox" name="dni[]" value="CET" checked /> ČET</label>
-    <label><input type="checkbox" name="dni[]" value="PET" checked /> PET</label>
-    <label><input type="checkbox" name="dni[]" value="SOB" checked /> SOB</label>
-    <label><input type="checkbox" name="dni[]" value="NED" checked /> NED</label>
+      <div class="days">
+        <label><input type="checkbox" name="dni[]" value="PON" checked /> PON</label>
+        <label><input type="checkbox" name="dni[]" value="TOR" checked /> TOR</label>
+        <label><input type="checkbox" name="dni[]" value="SRE" checked /> SRE</label>
+        <label><input type="checkbox" name="dni[]" value="CET" checked /> CET</label>
+        <label><input type="checkbox" name="dni[]" value="PET" checked /> PET</label>
+        <label><input type="checkbox" name="dni[]" value="SOB" checked /> SOB</label>
+        <label><input type="checkbox" name="dni[]" value="NED" checked /> NED</label>
+      </div>
+
+      <button type="submit">Potrdi</button>
+      <br />
+      <button type="button">Stanje</button>
+      <button type="button">Test</button>
+      <button type="button">GSM</button>
+      <button type="button">Nastavitve</button>
+    </form>
   </div>
-
-  <button type="submit">Potrdi</button>
-  <button type="button" onclick="window.history.back();">Nazaj</button>
-  <button type="button">Stanje</button>
-  <button type="button">Test</button>
-  <button type="button">GSM</button>
-  <button type="button">Nastavitve</button>
-
-</form>
 
 </body>
 </html>
