@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('/nastavitve.db'); // tvoja baza
+const db = require('../database2'); // tvoja baza
 
 // Helper za checkbox -> boolean
 const castBool = v => v === 'on';
