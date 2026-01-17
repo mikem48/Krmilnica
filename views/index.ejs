@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Nastavitve naprave in krmilnice</title>
+  <title>ESP32 Dashboard</title>
 
-  <!-- Bootstrap CSS -->
+  <!-- Vključitev Bootstrap CSS iz CDN -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <!-- Bootstrap Icons -->
+
+  <!-- Ikone Bootstrap -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
 
   <style>
@@ -71,14 +72,25 @@
       font-weight: 600;
       padding: 8px 20px;
     }
-    .section-title {
-      font-weight: 700;
-      margin-bottom: 0.75rem;
+    .add-device-form {
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgb(0 0 0 / 0.1);
+    }
+    .empty-state {
+      color: #eee;
+      text-align: center;
+      padding: 50px 0;
+      font-size: 1.2rem;
+      background: rgba(255 255 255 / 0.2);
+      border-radius: 12px;
     }
   </style>
-</head>
 
+</head>
 <body>
+
   <!-- Navigacija -->
   <nav class="navbar navbar-expand-md navbar-light">
     <div class="container">
@@ -91,7 +103,7 @@
       <div class="collapse navbar-collapse" id="navMenu">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item">
-            <a href="/" class="nav-link"><i class="bi bi-house-door"></i> Domov</a>
+            <a href="/" class="nav-link active"><i class="bi bi-house-door"></i> Domov</a>
           </li>
           <% if(user && user.is_admin){ %>
           <li class="nav-item">
@@ -108,475 +120,80 @@
 
   <!-- Glavna vsebina -->
   <div class="container main-container">
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
-      <h2 class="mb-0">Nastavitve naprave</h2>
-      <a href="/" class="btn btn-outline-light btn-custom">
-        <i class="bi bi-arrow-left"></i> Nazaj
-      </a>
-    </div>
+    <h2 class="mb-4">Moje naprave</h2>
 
-    <div class="row g-4">
-      <!-- Povzetek naprave -->
-      <div class="col-lg-4">
-        <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <span>
-              <i class="bi bi-hdd-network"></i>
-              <%= settings.device_name || 'krmilnica1' %>
-            </span>
+    <% if (devices.length > 0) { %>
+      <div class="row">
+        <% devices.forEach(device => { 
+          const now = Math.floor(Date.now() / 1000);
+          const lastUpdate = device.last_update || 0;
+          const timeDiff = now - lastUpdate;
+          const isOnline = timeDiff < 300; // naprava online, če je bila aktivna v zadnjih 5 minutah
 
-            <span class="<%= settings.online ? 'status-online' : 'status-offline' %>">
-              <i class="bi bi-circle-fill"></i> <%= settings.online ? 'Online' : 'Offline' %>
-            </span>
+          const lastUpdateFormatted = lastUpdate > 0 
+            ? new Date(lastUpdate*1000).toLocaleString('sl-SI')
+            : 'Nikoli';
+        %>
+        <div class="col-md-6 col-lg-4">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <span><i class="bi bi-hdd-network"></i> <%= device.name %></span>
+              <span class="<%= isOnline ? 'status-online' : 'status-offline' %>">
+                <i class="bi bi-circle-fill"></i> <%= isOnline ? 'Online' : 'Offline' %>
+              </span>
+            </div>
+            <div class="card-body">
+              <p class="device-id">ID: <%= device.id %></p>
+              <div>
+                <span class="value-label">Vrednost 1:</span> 
+                <span><%= device.value1 !== null && device.value1 !== undefined ? device.value1.toFixed(2) : '--' %></span>
+              </div>
+              <div>
+                <span class="value-label">Vrednost 2:</span> 
+                <span><%= device.value2 !== null && device.value2 !== undefined ? device.value2.toFixed(2) : '--' %></span>
+              </div>
+              <p class="mt-3 fst-italic text-muted"><small>Zadnja posodobitev: <%= lastUpdateFormatted %></small></p>
+              <a href="/device/<%= device.id %>/settings" class="btn btn-primary btn-custom mt-2">
+                <i class="bi bi-gear"></i> Nastavitve
+              </a>
+            </div>
           </div>
+        </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <div class="empty-state">
+        <i class="bi bi-inbox"></i><br />
+        <p>Nimate dodanih naprav.</p>
+      </div>
+    <% } %>
 
-          <div class="card-body">
-            <p class="device-id mb-2">ID: <%= settings.device_id || 'ABCDEFGH' %></p>
-
-            <div class="mb-1">
-              <span class="value-label">Vrednost 1:</span>
-              <span><%= settings.value1 != null ? settings.value1 : '25.30' %></span>
-            </div>
-
-            <div class="mb-2">
-              <span class="value-label">Vrednost 2:</span>
-              <span><%= settings.value2 != null ? settings.value2 : '62.50' %></span>
-            </div>
-
-            <p class="mt-3 fst-italic text-muted mb-3">
-              <small>Zadnja posodobitev: <%= settings.last_update || '16. 1. 2026, 22:34:02' %></small>
-            </p>
-
-            <!-- ohranjen element (isti onclick) -->
-            <button
-              class="btn btn-primary btn-custom"
-              type="button"
-              onclick="location.href='/device-settings?device_id=<%= settings.device_id %>'"
-            >
-              <i class="bi bi-gear"></i> Nastavitve
+    <!-- Dodaj napravo -->
+    <div class="add-device-form mt-5">
+      <h4>Dodaj novo napravo</h4>
+      <form action="/add-device" method="POST" novalidate>
+        <div class="row g-3 align-items-center">
+          <div class="col-md-6">
+            <label for="name" class="form-label">Ime naprave</label>
+            <input type="text" id="name" name="name" class="form-control" placeholder="npr. Dnevna soba" required />
+          </div>
+          <div class="col-md-4">
+            <label for="deviceId" class="form-label">ID naprave (8 znakov)</label>
+            <input type="text" id="deviceId" name="deviceId" class="form-control" placeholder="npr. ABCD1234" maxlength="8" pattern="[a-zA-Z0-9]{8}" required />
+            <div class="form-text">Natančno 8 alfanumeričnih znakov</div>
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-success btn-custom w-100">
+              <i class="bi bi-plus-lg"></i> Dodaj
             </button>
           </div>
         </div>
-      </div>
-
-      <!-- Forma z nastavitvami -->
-      <div class="col-lg-8">
-        <div class="card">
-          <div class="card-header">
-            <i class="bi bi-sliders"></i> Parametri naprave in krmilnice
-          </div>
-
-          <div class="card-body">
-            <form action="/settings" method="POST" class="settings-card" id="settingsForm">
-              <input type="hidden" name="device_id" value="<%= settings.device_id %>">
-
-              <div class="section-title">Naprava</div>
-
-              <label class="form-label">Ura in minuta:</label>
-              <div class="input-group mb-3">
-                <input
-                  type="number"
-                  class="form-control"
-                  name="ura_h"
-                  min="0"
-                  max="23"
-                  placeholder="<%= settings.ura_h != null ? String(settings.ura_h) : '18' %>"
-                  value="<%= settings.ura_h != null ? String(settings.ura_h) : '' %>"
-                  data-original="<%= settings.ura_h != null ? String(settings.ura_h) : '' %>"
-                  required
-                >
-                <span class="input-group-text">:</span>
-                <input
-                  type="number"
-                  class="form-control"
-                  name="ura_min"
-                  min="0"
-                  max="59"
-                  placeholder="<%= settings.ura_min != null ? String(settings.ura_min) : '44' %>"
-                  value="<%= settings.ura_min != null ? String(settings.ura_min) : '' %>"
-                  data-original="<%= settings.ura_min != null ? String(settings.ura_min) : '' %>"
-                  required
-                >
-              </div>
-
-              <label class="form-label">Datum (dan, mesec, leto):</label>
-              <div class="row g-2 mb-3">
-                <div class="col-md-4">
-                  <input
-                    type="number"
-                    class="form-control"
-                    name="datum_dan"
-                    min="1"
-                    max="31"
-                    placeholder="<%= settings.datum_dan != null ? String(settings.datum_dan) : '17' %>"
-                    value="<%= settings.datum_dan != null ? String(settings.datum_dan) : '' %>"
-                    data-original="<%= settings.datum_dan != null ? String(settings.datum_dan) : '' %>"
-                    required
-                  >
-                </div>
-                <div class="col-md-4">
-                  <input
-                    type="number"
-                    class="form-control"
-                    name="datum_mesec"
-                    min="1"
-                    max="12"
-                    placeholder="<%= settings.datum_mesec != null ? String(settings.datum_mesec) : '01' %>"
-                    value="<%= settings.datum_mesec != null ? String(settings.datum_mesec) : '' %>"
-                    data-original="<%= settings.datum_mesec != null ? String(settings.datum_mesec) : '' %>"
-                    required
-                  >
-                </div>
-                <div class="col-md-4">
-                  <input
-                    type="number"
-                    class="form-control"
-                    name="datum_leto"
-                    min="2020"
-                    max="2100"
-                    placeholder="<%= settings.datum_leto != null ? String(settings.datum_leto) : '2026' %>"
-                    value="<%= settings.datum_leto != null ? String(settings.datum_leto) : '' %>"
-                    data-original="<%= settings.datum_leto != null ? String(settings.datum_leto) : '' %>"
-                    required
-                  >
-                </div>
-              </div>
-
-              <label class="form-label">Višina (cm):</label>
-              <input
-                type="number"
-                step="0.01"
-                class="form-control mb-3"
-                name="visina"
-                placeholder="<%= settings.visina != null ? String(settings.visina) : '100.00' %>"
-                value="<%= settings.visina != null ? String(settings.visina) : '' %>"
-                data-original="<%= settings.visina != null ? String(settings.visina) : '' %>"
-                required
-              >
-
-              <label class="form-label">Wifi čas (s):</label>
-              <input
-                type="number"
-                class="form-control mb-3"
-                name="wifi_cas"
-                placeholder="<%= settings.wifi_cas != null ? String(settings.wifi_cas) : '60' %>"
-                value="<%= settings.wifi_cas != null ? String(settings.wifi_cas) : '' %>"
-                data-original="<%= settings.wifi_cas != null ? String(settings.wifi_cas) : '' %>"
-                required
-              >
-
-              <label class="form-label">Obvestilo napetost (V):</label>
-              <input
-                type="number"
-                step="0.01"
-                class="form-control mb-3"
-                name="obvestilo_napetost"
-                placeholder="<%= settings.obvestilo_napetost != null ? String(settings.obvestilo_napetost) : '12.50' %>"
-                value="<%= settings.obvestilo_napetost != null ? String(settings.obvestilo_napetost) : '' %>"
-                data-original="<%= settings.obvestilo_napetost != null ? String(settings.obvestilo_napetost) : '' %>"
-                required
-              >
-
-              <label class="form-label">Obvestilo krmilo (%):</label>
-              <input
-                type="number"
-                class="form-control mb-3"
-                name="obvestilo_krmilo"
-                placeholder="<%= settings.obvestilo_krmilo != null ? String(settings.obvestilo_krmilo) : '80' %>"
-                value="<%= settings.obvestilo_krmilo != null ? String(settings.obvestilo_krmilo) : '' %>"
-                data-original="<%= settings.obvestilo_krmilo != null ? String(settings.obvestilo_krmilo) : '' %>"
-                required
-              >
-
-              <label class="form-label">Obvestilo številka:</label>
-              <input
-                type="text"
-                class="form-control mb-4"
-                name="obvestilo_stevilka"
-                placeholder="<%= settings.obvestilo_stevilka != null ? String(settings.obvestilo_stevilka) : '+38631280019' %>"
-                value="<%= settings.obvestilo_stevilka != null ? String(settings.obvestilo_stevilka) : '' %>"
-                data-original="<%= settings.obvestilo_stevilka != null ? String(settings.obvestilo_stevilka) : '' %>"
-                required
-              >
-
-              <hr class="my-4" />
-
-              <h3 class="h5 mb-3">Krmilnica</h3>
-              <p class="mb-3">
-                <b>Časovnika: </b><%= settings.casovnika_on ? "On" : "Off" %>
-              </p>
-
-              <label class="form-label">Ura 1 in minuta:</label>
-              <div class="input-group mb-3">
-                <input
-                  type="number"
-                  class="form-control"
-                  name="ura1_h"
-                  min="0"
-                  max="23"
-                  placeholder="<%= settings.ura1_h != null ? String(settings.ura1_h) : '08' %>"
-                  value="<%= settings.ura1_h != null ? String(settings.ura1_h) : '' %>"
-                  data-original="<%= settings.ura1_h != null ? String(settings.ura1_h) : '' %>"
-                  required
-                >
-                <span class="input-group-text">:</span>
-                <input
-                  type="number"
-                  class="form-control"
-                  name="ura1_min"
-                  min="0"
-                  max="59"
-                  placeholder="<%= settings.ura1_min != null ? String(settings.ura1_min) : '30' %>"
-                  value="<%= settings.ura1_min != null ? String(settings.ura1_min) : '' %>"
-                  data-original="<%= settings.ura1_min != null ? String(settings.ura1_min) : '' %>"
-                  required
-                >
-              </div>
-
-              <label class="form-label">Ura 2 in minuta:</label>
-              <div class="row g-2 align-items-center mb-3">
-                <div class="col-md-4">
-                  <input
-                    type="number"
-                    class="form-control"
-                    name="ura2_h"
-                    min="0"
-                    max="23"
-                    placeholder="<%= settings.ura2_h != null ? String(settings.ura2_h) : '18' %>"
-                    value="<%= settings.ura2_h != null ? String(settings.ura2_h) : '' %>"
-                    data-original="<%= settings.ura2_h != null ? String(settings.ura2_h) : '' %>"
-                  >
-                </div>
-                <div class="col-md-1 text-center d-none d-md-block">:</div>
-                <div class="col-md-4">
-                  <input
-                    type="number"
-                    class="form-control"
-                    name="ura2_min"
-                    min="0"
-                    max="59"
-                    placeholder="<%= settings.ura2_min != null ? String(settings.ura2_min) : '45' %>"
-                    value="<%= settings.ura2_min != null ? String(settings.ura2_min) : '' %>"
-                    data-original="<%= settings.ura2_min != null ? String(settings.ura2_min) : '' %>"
-                  >
-                </div>
-                <div class="col-md-3">
-                  <!-- hidden "false" za checkbox -->
-                  <input type="hidden" name="casovnik2" value="" disabled data-false-for="casovnik2">
-
-                  <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      name="casovnik2"
-                      id="casovnik2"
-                      value="1"
-                      data-original="<%= settings.casovnik2 ? '1' : '0' %>"
-                      <%= settings.casovnik2 ? "checked" : "" %>
-                    >
-                    <label class="form-check-label" for="casovnik2">časovnik 2</label>
-                  </div>
-                </div>
-              </div>
-
-              <label class="form-label">Čas delovanja (s):</label>
-              <input
-                type="number"
-                class="form-control mb-3"
-                name="cas_delovanja"
-                placeholder="<%= settings.cas_delovanja != null ? String(settings.cas_delovanja) : '60' %>"
-                value="<%= settings.cas_delovanja != null ? String(settings.cas_delovanja) : '' %>"
-                data-original="<%= settings.cas_delovanja != null ? String(settings.cas_delovanja) : '' %>"
-                required
-              >
-
-              <label class="form-label">Hitrost motorja (%):</label>
-              <input
-                type="number"
-                class="form-control mb-3"
-                name="hitrost_motorja"
-                placeholder="<%= settings.hitrost_motorja != null ? String(settings.hitrost_motorja) : '75' %>"
-                value="<%= settings.hitrost_motorja != null ? String(settings.hitrost_motorja) : '' %>"
-                data-original="<%= settings.hitrost_motorja != null ? String(settings.hitrost_motorja) : '' %>"
-                required
-              >
-
-              <label class="form-label">Dnevi za vklop:</label>
-              <div class="form-text mb-2">
-                Namig: izberi vsaj en dan (PON–NED). Če ne izbereš nobenega, se časovnik ne bo izvajal.
-              </div>
-
-              <div class="row g-2 checkbox-group mb-4">
-                <div class="col-6 col-md-3">
-                  <input type="hidden" name="pon" value="" disabled data-false-for="pon">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="pon" id="pon" value="1"
-                      data-original="<%= settings.pon ? '1' : '0' %>" <%= settings.pon ? "checked" : "" %> >
-                    <label class="form-check-label" for="pon" data-bs-toggle="tooltip" data-bs-title="Ponedeljek">PON</label>
-                  </div>
-                </div>
-
-                <div class="col-6 col-md-3">
-                  <input type="hidden" name="tor" value="" disabled data-false-for="tor">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="tor" id="tor" value="1"
-                      data-original="<%= settings.tor ? '1' : '0' %>" <%= settings.tor ? "checked" : "" %> >
-                    <label class="form-check-label" for="tor" data-bs-toggle="tooltip" data-bs-title="Torek">TOR</label>
-                  </div>
-                </div>
-
-                <div class="col-6 col-md-3">
-                  <input type="hidden" name="sre" value="" disabled data-false-for="sre">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="sre" id="sre" value="1"
-                      data-original="<%= settings.sre ? '1' : '0' %>" <%= settings.sre ? "checked" : "" %> >
-                    <label class="form-check-label" for="sre" data-bs-toggle="tooltip" data-bs-title="Sreda">SRE</label>
-                  </div>
-                </div>
-
-                <div class="col-6 col-md-3">
-                  <input type="hidden" name="cet" value="" disabled data-false-for="cet">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="cet" id="cet" value="1"
-                      data-original="<%= settings.cet ? '1' : '0' %>" <%= settings.cet ? "checked" : "" %> >
-                    <label class="form-check-label" for="cet" data-bs-toggle="tooltip" data-bs-title="Četrtek">CET</label>
-                  </div>
-                </div>
-
-                <div class="col-6 col-md-3">
-                  <input type="hidden" name="pet" value="" disabled data-false-for="pet">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="pet" id="pet" value="1"
-                      data-original="<%= settings.pet ? '1' : '0' %>" <%= settings.pet ? "checked" : "" %> >
-                    <label class="form-check-label" for="pet" data-bs-toggle="tooltip" data-bs-title="Petek">PET</label>
-                  </div>
-                </div>
-
-                <div class="col-6 col-md-3">
-                  <input type="hidden" name="sob" value="" disabled data-false-for="sob">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="sob" id="sob" value="1"
-                      data-original="<%= settings.sob ? '1' : '0' %>" <%= settings.sob ? "checked" : "" %> >
-                    <label class="form-check-label" for="sob" data-bs-toggle="tooltip" data-bs-title="Sobota">SOB</label>
-                  </div>
-                </div>
-
-                <div class="col-6 col-md-3">
-                  <input type="hidden" name="ned" value="" disabled data-false-for="ned">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="ned" id="ned" value="1"
-                      data-original="<%= settings.ned ? '1' : '0' %>" <%= settings.ned ? "checked" : "" %> >
-                    <label class="form-check-label" for="ned" data-bs-toggle="tooltip" data-bs-title="Nedelja">NED</label>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Shrani samo spremembe -->
-              <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" role="switch" id="saveOnlyChanges" checked>
-                <label class="form-check-label" for="saveOnlyChanges">Shrani samo spremembe</label>
-                <div class="form-text">
-                  Pošlje se samo spremenjene vrednosti. Če ničesar ne spremeniš, se forma ne bo oddala.
-                </div>
-              </div>
-
-              <div class="d-flex flex-wrap gap-2">
-                <button type="submit" class="btn btn-primary btn-custom">
-                  <i class="bi bi-save"></i> Shrani nastavitve
-                </button>
-                <a href="/" class="btn btn-outline-secondary btn-custom">
-                  <i class="bi bi-arrow-left"></i> Nazaj
-                </a>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
+      </form>
     </div>
   </div>
 
   <!-- Bootstrap JS bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <script>
-    (function () {
-      const form = document.getElementById('settingsForm');
-      if (!form) return;
-
-      const toggle = document.getElementById('saveOnlyChanges');
-
-      // Tooltipi
-      document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => {
-        try { new bootstrap.Tooltip(el); } catch (e) {}
-      });
-
-      form.addEventListener('submit', (e) => {
-        if (!toggle || !toggle.checked) return; // pošlji vse kot prej
-
-        let changedCount = 0;
-
-        // Najprej privzeto onemogočimo vse hidden "false" inpute
-        form.querySelectorAll('input[type="hidden"][data-false-for]').forEach((h) => {
-          h.disabled = true;
-        });
-
-        const fields = form.querySelectorAll('input');
-
-        fields.forEach((el) => {
-          if (!el.name) return;
-          if (el.type === 'hidden' && el.name === 'device_id') return;
-
-          if (el.type === 'checkbox') {
-            const original = el.dataset.original === '1';
-            const current = el.checked;
-
-            if (original === current) {
-              // Nespremenjeno => ne pošljemo ničesar
-              el.disabled = true;
-              return;
-            }
-
-            changedCount++;
-
-            const falseHidden = form.querySelector(`input[type="hidden"][data-false-for="${CSS.escape(el.name)}"]`);
-
-            if (current === false) {
-              // Checkbox se je spremenil na unchecked:
-              // - checkbox disabled (ne pošlje se)
-              // - hidden enabled => pošlje se name="" (prazno) => falsy
-              el.disabled = true;
-              if (falseHidden) falseHidden.disabled = false;
-            } else {
-              // Checkbox se je spremenil na checked:
-              // - checkbox enabled => pošlje "1"
-              // - hidden disabled
-              el.disabled = false;
-              if (falseHidden) falseHidden.disabled = true;
-            }
-
-            return;
-          }
-
-          // Text/number
-          if (el.type === 'text' || el.type === 'number') {
-            const original = (el.dataset.original ?? '');
-            const current = (el.value ?? '');
-
-            if (String(original) === String(current)) {
-              el.disabled = true;
-            } else {
-              changedCount++;
-              el.disabled = false;
-            }
-          }
-        });
-
-        if (changedCount === 0) {
-          e.preventDefault();
-          alert('Ni sprememb za shraniti.');
-        }
-      });
-    })();
-  </script>
 </body>
 </html>
