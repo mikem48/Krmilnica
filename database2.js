@@ -1,3 +1,3 @@
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('./esp32.db');
+const db = new sqlite3.Database('./settings.db');
 module.exports = db;
