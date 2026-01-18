@@ -262,5 +262,27 @@ router.get('/:id/check-update', (req, res) => {
     });
   });
 });
+// Odstrani napravo samo iz uporabnikovega seznama (briše povezavo v user_devices)
+router.post('/:id/remove', (req, res) => {
+  if (!req.isAuthenticated()) return res.redirect('/login');
 
+  const deviceId = req.params.id;
+  if (!/^[a-zA-Z0-9]{8}$/.test(deviceId)) {
+    return res.send('Neveljaven ID naprave.');
+  }
+
+  db.run(
+    'DELETE FROM user_devices WHERE user_id = ? AND device_id = ?',
+    [req.user.id, deviceId],
+    function (err) {
+      if (err) {
+        console.error('Napaka pri odstranitvi iz user_devices:', err);
+        return res.status(500).send('Napaka pri odstranitvi naprave iz seznama.');
+      }
+
+      // Po odstranitvi nazaj na domov (seznam naprav)
+      return res.redirect('/');
+    }
+  );
+});
 module.exports = router;
