@@ -132,7 +132,6 @@
               <small>Zadnja posodobitev: <%= settings.last_update || 'Nikoli' %></small>
             </p>
 
-            <!-- gumb (ostane element, vodi na isto stran) -->
             <a class="btn btn-primary btn-custom" href="">
               <i class="bi bi-gear"></i> Nastavitve
             </a>
@@ -353,7 +352,6 @@
                 </div>
 
                 <div class="col-md-3">
-                  <!-- hidden false za checkbox -->
                   <input type="hidden" name="casovnik2" value="" disabled data-false-for="casovnik2">
 
                   <div class="form-check">
@@ -402,15 +400,8 @@
                 <div class="col-6 col-md-3">
                   <input type="hidden" name="pon" value="" disabled data-false-for="pon">
                   <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      name="pon"
-                      id="pon"
-                      value="1"
-                      data-original="<%= settings.pon ? '1' : '0' %>"
-                      <%= settings.pon ? "checked" : "" %>
-                    >
+                    <input class="form-check-input" type="checkbox" name="pon" id="pon" value="1"
+                      data-original="<%= settings.pon ? '1' : '0' %>" <%= settings.pon ? "checked" : "" %>>
                     <label class="form-check-label" for="pon" data-bs-toggle="tooltip" data-bs-title="Ponedeljek">PON</label>
                   </div>
                 </div>
@@ -418,15 +409,8 @@
                 <div class="col-6 col-md-3">
                   <input type="hidden" name="tor" value="" disabled data-false-for="tor">
                   <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      name="tor"
-                      id="tor"
-                      value="1"
-                      data-original="<%= settings.tor ? '1' : '0' %>"
-                      <%= settings.tor ? "checked" : "" %>
-                    >
+                    <input class="form-check-input" type="checkbox" name="tor" id="tor" value="1"
+                      data-original="<%= settings.tor ? '1' : '0' %>" <%= settings.tor ? "checked" : "" %>>
                     <label class="form-check-label" for="tor" data-bs-toggle="tooltip" data-bs-title="Torek">TOR</label>
                   </div>
                 </div>
@@ -434,15 +418,8 @@
                 <div class="col-6 col-md-3">
                   <input type="hidden" name="sre" value="" disabled data-false-for="sre">
                   <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      name="sre"
-                      id="sre"
-                      value="1"
-                      data-original="<%= settings.sre ? '1' : '0' %>"
-                      <%= settings.sre ? "checked" : "" %>
-                    >
+                    <input class="form-check-input" type="checkbox" name="sre" id="sre" value="1"
+                      data-original="<%= settings.sre ? '1' : '0' %>" <%= settings.sre ? "checked" : "" %>>
                     <label class="form-check-label" for="sre" data-bs-toggle="tooltip" data-bs-title="Sreda">SRE</label>
                   </div>
                 </div>
@@ -450,15 +427,8 @@
                 <div class="col-6 col-md-3">
                   <input type="hidden" name="cet" value="" disabled data-false-for="cet">
                   <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      name="cet"
-                      id="cet"
-                      value="1"
-                      data-original="<%= settings.cet ? '1' : '0' %>"
-                      <%= settings.cet ? "checked" : "" %>
-                    >
+                    <input class="form-check-input" type="checkbox" name="cet" id="cet" value="1"
+                      data-original="<%= settings.cet ? '1' : '0' %>" <%= settings.cet ? "checked" : "" %>>
                     <label class="form-check-label" for="cet" data-bs-toggle="tooltip" data-bs-title="Četrtek">CET</label>
                   </div>
                 </div>
@@ -466,15 +436,8 @@
                 <div class="col-6 col-md-3">
                   <input type="hidden" name="pet" value="" disabled data-false-for="pet">
                   <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      name="pet"
-                      id="pet"
-                      value="1"
-                      data-original="<%= settings.pet ? '1' : '0' %>"
-                      <%= settings.pet ? "checked" : "" %>
-                    >
+                    <input class="form-check-input" type="checkbox" name="pet" id="pet" value="1"
+                      data-original="<%= settings.pet ? '1' : '0' %>" <%= settings.pet ? "checked" : "" %>>
                     <label class="form-check-label" for="pet" data-bs-toggle="tooltip" data-bs-title="Petek">PET</label>
                   </div>
                 </div>
@@ -482,15 +445,8 @@
                 <div class="col-6 col-md-3">
                   <input type="hidden" name="sob" value="" disabled data-false-for="sob">
                   <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      name="sob"
-                      id="sob"
-                      value="1"
-                      data-original="<%= settings.sob ? '1' : '0' %>"
-                      <%= settings.sob ? "checked" : "" %>
-                    >
+                    <input class="form-check-input" type="checkbox" name="sob" id="sob" value="1"
+                      data-original="<%= settings.sob ? '1' : '0' %>" <%= settings.sob ? "checked" : "" %>>
                     <label class="form-check-label" for="sob" data-bs-toggle="tooltip" data-bs-title="Sobota">SOB</label>
                   </div>
                 </div>
@@ -498,15 +454,8 @@
                 <div class="col-6 col-md-3">
                   <input type="hidden" name="ned" value="" disabled data-false-for="ned">
                   <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      name="ned"
-                      id="ned"
-                      value="1"
-                      data-original="<%= settings.ned ? '1' : '0' %>"
-                      <%= settings.ned ? "checked" : "" %>
-                    >
+                    <input class="form-check-input" type="checkbox" name="ned" id="ned" value="1"
+                      data-original="<%= settings.ned ? '1' : '0' %>" <%= settings.ned ? "checked" : "" %>>
                     <label class="form-check-label" for="ned" data-bs-toggle="tooltip" data-bs-title="Nedelja">NED</label>
                   </div>
                 </div>
@@ -521,6 +470,7 @@
                 </div>
               </div>
 
+              <!-- Gumbi (brez nested form!) -->
               <div class="d-flex flex-wrap gap-2">
                 <button type="submit" class="btn btn-primary btn-custom" id="submitBtn">
                   <i class="bi bi-save"></i> Shrani nastavitve
@@ -530,19 +480,26 @@
                   <i class="bi bi-arrow-left"></i> Nazaj
                 </a>
 
-                <!-- Odstrani napravo samo iz uporabnikovega seznama -->
-                <form
-                  action="/device/<%= settings.device_id %>/remove"
-                  method="POST"
-                  id="removeDeviceForm"
-                  class="ms-auto"
+                <!-- Odstrani iz seznama (submit ločene forme + brez validacije) -->
+                <button
+                  type="submit"
+                  class="btn btn-danger btn-custom ms-auto"
+                  id="removeDeviceBtn"
+                  form="removeDeviceForm"
+                  formnovalidate
                 >
-                  <button type="submit" class="btn btn-danger btn-custom" id="removeDeviceBtn">
-                    <i class="bi bi-trash"></i> Odstrani iz seznama
-                  </button>
-                </form>
+                  <i class="bi bi-trash"></i> Odstrani iz seznama
+                </button>
               </div>
             </form>
+
+            <!-- Ločena forma za remove (zunaj settings forme) -->
+            <form
+              action="/device/<%= settings.device_id %>/remove"
+              method="POST"
+              id="removeDeviceForm"
+            ></form>
+
           </div>
         </div>
       </div>
@@ -567,15 +524,11 @@
 
       function enableAllFields() {
         form.querySelectorAll('input').forEach((el) => {
-          // device_id naj ostane enabled
           if (el.type === 'hidden' && el.name === 'device_id') return;
-
-          // hidden "false" so privzeto disabled (upravljamo jih pri checkboxih)
           if (el.type === 'hidden' && el.dataset.falseFor) {
             el.disabled = true;
             return;
           }
-
           el.disabled = false;
         });
       }
@@ -583,7 +536,6 @@
       function prepareChangedOnly() {
         let changedCount = 0;
 
-        // privzeto onemogoči vse hidden "false"
         form.querySelectorAll('input[type="hidden"][data-false-for]').forEach((h) => {
           h.disabled = true;
         });
@@ -600,7 +552,7 @@
             const current = el.checked;
 
             if (original === current) {
-              el.disabled = true; // nespremenjeno
+              el.disabled = true;
               return;
             }
 
@@ -611,11 +563,9 @@
             );
 
             if (current === false) {
-              // spremenjeno na unchecked -> pošljemo hidden (prazno)
               el.disabled = true;
               if (falseHidden) falseHidden.disabled = false;
             } else {
-              // spremenjeno na checked -> pošljemo checkbox ("1")
               el.disabled = false;
               if (falseHidden) falseHidden.disabled = true;
             }
@@ -627,7 +577,7 @@
             const current = (el.value ?? '');
 
             if (String(original) === String(current)) {
-              el.disabled = true; // nespremenjeno -> ne validira se
+              el.disabled = true;
             } else {
               changedCount++;
               el.disabled = false;
@@ -638,7 +588,6 @@
         return changedCount;
       }
 
-      // Če izklopiš toggle, omogoči nazaj vsa polja
       if (toggle) {
         toggle.addEventListener('change', () => {
           if (toggle.checked) return;
@@ -646,7 +595,7 @@
         });
       }
 
-      // Ključni fix: priprava na CLICK (pred HTML validacijo)
+      // Priprava na CLICK (pred HTML validacijo) za "shrani samo spremembe"
       if (submitBtn) {
         submitBtn.addEventListener('click', (e) => {
           if (!toggle || !toggle.checked) return;
@@ -662,9 +611,8 @@
       }
 
       // Potrditev odstranitve iz seznama
-      const removeForm = document.getElementById('removeDeviceForm');
       const removeBtn = document.getElementById('removeDeviceBtn');
-      if (removeForm && removeBtn) {
+      if (removeBtn) {
         removeBtn.addEventListener('click', (e) => {
           const ok = confirm(
             'Ali ste prepričani, da želite odstraniti napravo iz svojega seznama?\n\n' +
