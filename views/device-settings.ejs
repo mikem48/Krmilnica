@@ -64,7 +64,7 @@
   <nav class="navbar navbar-expand-md navbar-light">
     <div class="container">
       <a class="navbar-brand fw-bold fs-4" href="/">
-        <i class="bi bi-cpu"></i> Nadzor krmilnic
+        <i class="bi bi-cpu"></i> ESP32 Dashboard
       </a>
 
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
@@ -119,12 +119,12 @@
             <p class="device-id mb-2">ID: <%= settings.device_id || 'ABCDEFGH' %></p>
 
             <div class="mb-1">
-              <span class="value-label">Napetost:</span>
+              <span class="value-label">Vrednost 1:</span>
               <span><%= settings.value1 != null ? settings.value1 : '25.30' %></span>
             </div>
 
             <div class="mb-2">
-              <span class="value-label">Nivo krmilna:</span>
+              <span class="value-label">Vrednost 2:</span>
               <span><%= settings.value2 != null ? settings.value2 : '62.50' %></span>
             </div>
 
@@ -155,11 +155,82 @@
           </div>
 
           <div class="card-body">
-            <!-- action="" -> POST na isti URL (/:id/settings), ne glede na mount path -->
+            <!-- action="" -> POST na isti URL (/:id/settings) -->
             <form action="" method="POST" class="settings-card" id="settingsForm">
               <input type="hidden" name="device_id" value="<%= settings.device_id %>">
 
               <div class="section-title">Naprava</div>
+
+              <label class="form-label">Ura in minuta:</label>
+              <div class="input-group mb-3">
+                <input
+                  type="number"
+                  class="form-control"
+                  name="ura_h"
+                  min="0"
+                  max="23"
+                  placeholder="<%= settings.ura_h != null ? String(settings.ura_h) : '18' %>"
+                  value="<%= settings.ura_h != null ? String(settings.ura_h) : '' %>"
+                  data-original="<%= settings.ura_h != null ? String(settings.ura_h) : '' %>"
+                  required
+                >
+                <span class="input-group-text">:</span>
+                <input
+                  type="number"
+                  class="form-control"
+                  name="ura_min"
+                  min="0"
+                  max="59"
+                  placeholder="<%= settings.ura_min != null ? String(settings.ura_min) : '44' %>"
+                  value="<%= settings.ura_min != null ? String(settings.ura_min) : '' %>"
+                  data-original="<%= settings.ura_min != null ? String(settings.ura_min) : '' %>"
+                  required
+                >
+              </div>
+
+              <label class="form-label">Datum (dan, mesec, leto):</label>
+              <div class="row g-2 mb-3">
+                <div class="col-md-4">
+                  <input
+                    type="number"
+                    class="form-control"
+                    name="datum_dan"
+                    min="1"
+                    max="31"
+                    placeholder="<%= settings.datum_dan != null ? String(settings.datum_dan) : '17' %>"
+                    value="<%= settings.datum_dan != null ? String(settings.datum_dan) : '' %>"
+                    data-original="<%= settings.datum_dan != null ? String(settings.datum_dan) : '' %>"
+                    required
+                  >
+                </div>
+                <div class="col-md-4">
+                  <input
+                    type="number"
+                    class="form-control"
+                    name="datum_mesec"
+                    min="1"
+                    max="12"
+                    placeholder="<%= settings.datum_mesec != null ? String(settings.datum_mesec) : '01' %>"
+                    value="<%= settings.datum_mesec != null ? String(settings.datum_mesec) : '' %>"
+                    data-original="<%= settings.datum_mesec != null ? String(settings.datum_mesec) : '' %>"
+                    required
+                  >
+                </div>
+                <div class="col-md-4">
+                  <input
+                    type="number"
+                    class="form-control"
+                    name="datum_leto"
+                    min="2020"
+                    max="2100"
+                    placeholder="<%= settings.datum_leto != null ? String(settings.datum_leto) : '2026' %>"
+                    value="<%= settings.datum_leto != null ? String(settings.datum_leto) : '' %>"
+                    data-original="<%= settings.datum_leto != null ? String(settings.datum_leto) : '' %>"
+                    required
+                  >
+                </div>
+              </div>
+
               <label class="form-label">Višina (cm):</label>
               <input
                 type="number"
@@ -224,7 +295,7 @@
                 <b>Časovnika: </b><%= settings.casovnika_on ? "On" : "Off" %>
               </p>
 
-              <label class="form-label">Časovnik 1:</label>
+              <label class="form-label">Ura 1 in minuta:</label>
               <div class="input-group mb-3">
                 <input
                   type="number"
@@ -251,7 +322,7 @@
                 >
               </div>
 
-              <label class="form-label">Časovnik 2:</label>
+              <label class="form-label">Ura 2 in minuta:</label>
               <div class="row g-2 align-items-center mb-3">
                 <div class="col-md-4">
                   <input
@@ -454,9 +525,22 @@
                 <button type="submit" class="btn btn-primary btn-custom" id="submitBtn">
                   <i class="bi bi-save"></i> Shrani nastavitve
                 </button>
+
                 <a href="/" class="btn btn-outline-secondary btn-custom">
                   <i class="bi bi-arrow-left"></i> Nazaj
                 </a>
+
+                <!-- Odstrani napravo samo iz uporabnikovega seznama -->
+                <form
+                  action="/device/<%= settings.device_id %>/remove"
+                  method="POST"
+                  id="removeDeviceForm"
+                  class="ms-auto"
+                >
+                  <button type="submit" class="btn btn-danger btn-custom" id="removeDeviceBtn">
+                    <i class="bi bi-trash"></i> Odstrani iz seznama
+                  </button>
+                </form>
               </div>
             </form>
           </div>
@@ -574,6 +658,19 @@
             alert('Ni sprememb za shraniti.');
             enableAllFields();
           }
+        });
+      }
+
+      // Potrditev odstranitve iz seznama
+      const removeForm = document.getElementById('removeDeviceForm');
+      const removeBtn = document.getElementById('removeDeviceBtn');
+      if (removeForm && removeBtn) {
+        removeBtn.addEventListener('click', (e) => {
+          const ok = confirm(
+            'Ali ste prepričani, da želite odstraniti napravo iz svojega seznama?\n\n' +
+            'Naprava ne bo izbrisana iz sistema, samo vi je ne boste več videli.'
+          );
+          if (!ok) e.preventDefault();
         });
       }
     })();
