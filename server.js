@@ -8,7 +8,6 @@ const path = require('path');
 const fs = require('fs');
 const db = require('./database');
 const settingsRouter = require('./routes/settings');
-const express = require('express');
 const app = express();
 const port = process.env.PORT || 80;  // Default to port 80 for HTTP
 app.listen(port, () => {
