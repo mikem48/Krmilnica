@@ -7,11 +7,9 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const db = require('./database');
-const settingsRouter = require('./routes/settings');
+
 const app = express();
-const port = process.env.PORT || 80;  // Default to port 80 for HTTP
-
-
+const port = process.env.PORT || 3000;
 
 // Ustvari mapo za firmware
 if (!fs.existsSync('./firmware')) {
@@ -27,6 +25,7 @@ const storage = multer.diskStorage({
     cb(null, file.originalname);
   }
 });
+
 const upload = multer({
   storage: storage,
   fileFilter: (req, file, cb) => {
@@ -38,45 +37,7 @@ const upload = multer({
   }
 });
 
-// Ustvari tabele
-db.serialize(() => {
-  console.log('Ustvarjanje tabel...');
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE,
-      password TEXT,
-      is_admin INTEGER DEFAULT 0,
-      auto_update INTEGER DEFAULT 1
-    );
-    -- ostale tabele --
-  `, (err) => {
-    if (err) {
-      console.error('Napaka pri ustvarjanju tabel:', err);
-      process.exit(1);
-    } else {
-      console.log('Tabele ustvarjene.');
-      
-      // Ustvari testnega admin uporabnika
-      const testUsername = 'admin';
-      const testPassword = 'admin123';
-      const hashedPassword = bcrypt.hashSync(testPassword, 10);
-      
-      db.run('INSERT OR IGNORE INTO users (username, password, is_admin) VALUES (?, ?, 1)',
-        [testUsername, hashedPassword], (err) => {
-          if (err) {
-            console.error('Napaka pri ustvarjanju admin uporabnika:', err);
-          } else {
-            console.log('✓ Admin uporabnik ustvarjen (username: admin, password: admin123)');
-          }
-          startServer();
-        });
-    }
-  });
-});
-
-const app = express();
-app.use('/', settingsRouter);
+// Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(session({
@@ -84,21 +45,26 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false,  // Nastavite na true samo za HTTPS
+    secure: false,
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 ur
+    maxAge: 24 * 60 * 60 * 1000
   }
 }));
 app.use(passport.initialize());
 app.use(passport.session());
 
+// View engine in static files
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use('/firmware', express.static('firmware'));
 
+// Routes
+const settingsRouter = require('./routes/settings');
 const deviceRoutes = require('./routes/devices');
+app.use('/', settingsRouter);
 app.use('/device', deviceRoutes);
 
+// Passport LocalStrategy
 passport.use(new LocalStrategy((username, password, done) => {
   console.log('Prijava za uporabnika:', username);
   db.get('SELECT * FROM users WHERE username = ?', [username], (err, user) => {
@@ -114,6 +80,7 @@ passport.deserializeUser((id, done) => {
   db.get('SELECT * FROM users WHERE id = ?', [id], (err, user) => done(err, user));
 });
 
+// Auth routes
 app.get('/register', (req, res) => res.render('register'));
 app.post('/register', (req, res) => {
   const { username, password } = req.body;
@@ -134,6 +101,7 @@ app.post('/register', (req, res) => {
 app.get('/login', (req, res) => res.render('login'));
 app.post('/login', passport.authenticate('local', { successRedirect: '/', failureRedirect: '/login' }));
 
+// Main routes
 app.get('/', (req, res) => {
   if (!req.isAuthenticated()) return res.redirect('/login');
   console.log('Osnovna stran za uporabnika:', req.user.id);
@@ -219,9 +187,60 @@ app.get('/logout', (req, res) => {
   req.logout(() => res.redirect('/login'));
 });
 
-function startServer() {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Strežnik teče na http://0.0.0.0:${PORT}`);
+// Initialize database and start server
+db.serialize(() => {
+  console.log('Ustvarjanje tabel...');
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE,
+      password TEXT,
+      is_admin INTEGER DEFAULT 0,
+      auto_update INTEGER DEFAULT 1
+    );
+    CREATE TABLE IF NOT EXISTS devices (
+      id TEXT PRIMARY KEY,
+      name TEXT
+    );
+    CREATE TABLE IF NOT EXISTS user_devices (
+      user_id INTEGER,
+      device_id TEXT,
+      PRIMARY KEY (user_id, device_id),
+      FOREIGN KEY (user_id) REFERENCES users(id),
+      FOREIGN KEY (device_id) REFERENCES devices(id)
+    );
+    CREATE TABLE IF NOT EXISTS firmware (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      version TEXT UNIQUE,
+      filename TEXT,
+      upload_date INTEGER,
+      file_path TEXT
+    );
+  `, (err) => {
+    if (err) {
+      console.error('Napaka pri ustvarjanju tabel:', err);
+      process.exit(1);
+    } else {
+      console.log('Tabele ustvarjene.');
+      
+      // Ustvari testnega admin uporabnika
+      const testUsername = 'admin';
+      const testPassword = 'admin123';
+      const hashedPassword = bcrypt.hashSync(testPassword, 10);
+      
+      db.run('INSERT OR IGNORE INTO users (username, password, is_admin) VALUES (?, ?, 1)',
+        [testUsername, hashedPassword], (err) => {
+          if (err) {
+            console.error('Napaka pri ustvarjanju admin uporabnika:', err);
+          } else {
+            console.log('✓ Admin uporabnik ustvarjen (username: admin, password: admin123)');
+          }
+          
+          // Start server after database initialization
+          app.listen(port, '0.0.0.0', () => {
+            console.log(`Strežnik teče na http://0.0.0.0:${port}`);
+          });
+        });
+    }
   });
-}
+});
