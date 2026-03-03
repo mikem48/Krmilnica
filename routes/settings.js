@@ -1,101 +1,160 @@
+// routes/devices.js
 const express = require('express');
 const router = express.Router();
-const db = require('../database2'); // tvoja baza
+const db = require('../database');
 
-// Helper za checkbox -> boolean
-const castBool = v => v === 'on';
+// ===========================
+// SPREJEM PODATKOV (ESP32 -> Server)
+// ===========================
 
-// GET /settings?device_id=naprava123
-router.get('/settings', async (req, res) => {
-  let deviceId = req.query.device_id;
-  if (!deviceId) {
-    return res.status(400).send('Manjkajoči device_id.');
+// Endpoint: POST /device/data
+// Sprejme: deviceId, value1, value2
+router.post('/data', (req, res) => {
+  const { deviceId, value1, value2 } = req.body;
+
+  if (!deviceId || !value1 || !value2) {
+    return res.status(400).json({ error: 'Manjkajoči podatki' });
   }
 
-  try {
-    const [rows] = await db.query('SELECT * FROM device_settings WHERE device_id = ? LIMIT 1', [deviceId]);
-    
-    // Privzete vrednosti, če ni zapisa
-    const defaults = {
-      device_id: deviceId,
-      ura_h: '', ura_min: '', datum_dan: '', datum_mesec: '', datum_leto: '',
-      visina: '', wifi_cas: '', obvestilo_napetost: '', obvestilo_krmilo: '', obvestilo_stevilka: '',
-      casovnika_on: true,
-      ura1_h: '', ura1_min: '', ura2_h: '', ura2_min: '', casovnik2: false,
-      cas_delovanja: '', hitrost_motorja: '',
-      pon: true, tor: true, sre: true, cet: true, pet: true, sob: true, ned: true
-    };
+  const lastUpdate = Math.floor(Date.now() / 1000);
 
-    const settings = rows.length > 0 ? rows[0] : defaults;
-
-    res.render('device-krmilnica-settings', { settings });
-  } catch(err) {
-    console.error(err);
-    res.status(500).send('Napaka pri nalaganju nastavitev.');
-  }
+  db.run(
+    `UPDATE devices SET value1 = ?, value2 = ?, last_update = ? WHERE id = ?`,
+    [value1, value2, lastUpdate, deviceId],
+    function (err) {
+      if (err) {
+        console.error('Napaka pri posodobitvi podatkov:', err);
+        return res.status(500).json({ error: 'Napaka v bazi' });
+      }
+      res.json({ success: true, message: 'Podatki sprejeti' });
+    }
+  );
 });
 
-// POST /settings
-router.post('/settings', async (req, res) => {
-  const data = req.body;
+// ===========================
+// SPREJEM NASTAVITEV (ESP32 -> Server)
+// ===========================
 
-  if (!data.device_id) {
-    return res.status(400).send('Manjkajoči device_id.');
-  }
+// Endpoint: POST /device/:id/settings
+// Sprejme: hitrost_motorja, ura1_h, ura1_min, ura2_h, ura2_min, cas_delovanja, casovnik2, dnevi
+router.post('/:id/settings', (req, res) => {
+  const deviceId = req.params.id;
+  const {
+    hitrost_motorja,
+    ura1_h, ura1_min,
+    ura2_h, ura2_min,
+    cas_delovanja,
+    casovnik2,
+    pon, tor, sre, cet, pet, sob, ned
+  } = req.body;
 
-  try {
-    // Preveri če obstajajo nastavitve za device_id
-    const [rows] = await db.query('SELECT id FROM device_settings WHERE device_id = ? LIMIT 1', [data.device_id]);
-    const values = [
-      data.device_id,
-      parseInt(data.ura_h), parseInt(data.ura_min),
-      parseInt(data.datum_dan), parseInt(data.datum_mesec), parseInt(data.datum_leto),
-      parseFloat(data.visina), parseInt(data.wifi_cas),
-      parseFloat(data.obvestilo_napetost), parseInt(data.obvestilo_krmilo),
-      data.obvestilo_stevilka,
+  // Preveri, ali ima uporabnik dostop do te naprave
+  db.get(
+    `SELECT user_id FROM user_devices WHERE device_id = ? AND user_id = ?`,
+    [deviceId, req.user.id],
+    (err, row) => {
+      if (err || !row) {
+        return res.status(403).json({ error: 'Dostop zavrnjen' });
+      }
 
-      true, // casovnika_on privzeto true
-      parseInt(data.ura1_h), parseInt(data.ura1_min),
-      data.ura2_h ? parseInt(data.ura2_h) : null,
-      data.ura2_min ? parseInt(data.ura2_min) : null,
-      castBool(data.casovnik2),
-      parseInt(data.cas_delovanja), parseInt(data.hitrost_motorja),
+      // Posodobi nastavitve v bazi
+      const sql = `
+        UPDATE devices SET 
+          hitrost_motorja = ?,
+          ura1_h = ?, ura1_min = ?,
+          ura2_h = ?, ura2_min = ?,
+          cas_delovanja = ?,
+          casovnik2 = ?,
+          pon = ?, tor = ?, sre = ?, cet = ?, pet = ?, sob = ?, ned = ?,
+          last_update = ?
+        WHERE id = ?
+      `;
 
-      castBool(data.pon), castBool(data.tor), castBool(data.sre),
-      castBool(data.cet), castBool(data.pet), castBool(data.sob), castBool(data.ned)
-    ];
+      const params = [
+        hitrost_motorja, ura1_h, ura1_min,
+        ura2_h, ura2_min, cas_delovanja,
+        casovnik2,
+        pon, tor, sre, cet, pet, sob, ned,
+        Math.floor(Date.now() / 1000), deviceId
+      ];
 
-    if (rows.length > 0) {
-      // Update
-      await db.query(
-        `UPDATE device_settings SET
-          ura_h=?, ura_min=?, datum_dan=?, datum_mesec=?, datum_leto=?, visina=?, wifi_cas=?, 
-          obvestilo_napetost=?, obvestilo_krmilo=?, obvestilo_stevilka=?, casovnika_on=?,
-          ura1_h=?, ura1_min=?, ura2_h=?, ura2_min=?, casovnik2=?, cas_delovanja=?, hitrost_motorja=?,
-          pon=?, tor=?, sre=?, cet=?, pet=?, sob=?, ned=?
-         WHERE device_id=?`,
-        [...values.slice(1), data.device_id]
-      );
-    } else {
-      // Insert
-      await db.query(
-        `INSERT INTO device_settings (
-          device_id, ura_h, ura_min, datum_dan, datum_mesec, datum_leto, visina, wifi_cas, 
-          obvestilo_napetost, obvestilo_krmilo, obvestilo_stevilka, casovnika_on,
-          ura1_h, ura1_min, ura2_h, ura2_min, casovnik2, cas_delovanja, hitrost_motorja,
-          pon, tor, sre, cet, pet, sob, ned
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        values
-      );
+      db.run(sql, params, function (err) {
+        if (err) {
+          console.error('Napaka pri posodobitvi nastavitev:', err);
+          return res.status(500).json({ error: 'Napaka pri posodobitvi' });
+        }
+        res.json({ success: true, message: 'Nastavitve posodobljene' });
+      });
     }
+  );
+});
 
-    // Preusmeri nazaj na GET z device_id, da sproži prikaz vsega
-    res.redirect(`/settings?device_id=${encodeURIComponent(data.device_id)}`);
+// ===========================
+// PREVERJANJE FIRMWARE (ESP32 -> Server)
+// ===========================
 
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Napaka pri shranjevanju nastavitev.');
-  }
+// Endpoint: GET /device/:id/check-update?version=...
+router.get('/:id/check-update', (req, res) => {
+  const deviceId = req.params.id;
+  const { version } = req.query;
+
+  // Preveri, ali ima uporabnik dostop do te naprave
+  db.get(
+    `SELECT user_id FROM user_devices WHERE device_id = ? AND user_id = ?`,
+    [deviceId, req.user.id],
+    (err, row) => {
+      if (err || !row) {
+        return res.status(403).json({ error: 'Dostop zavrnjen' });
+      }
+
+      // Primer: če je verzija starejša od trenutne
+      const currentVersion = 'krmilnica_20.01.26';
+      const updateAvailable = version !== currentVersion;
+
+      res.json({
+        updateAvailable: updateAvailable,
+        latestVersion: currentVersion,
+        downloadUrl: updateAvailable ? `https://github.com/mikem48/Krmilnica/releases/download/v${currentVersion}/firmware.bin` : null
+      });
+    }
+  );
+});
+
+// ===========================
+// PREJEM PARAMETROV (ESP32 -> Server)
+// ===========================
+
+// Endpoint: GET /device/:id/params
+router.get('/:id/params', (req, res) => {
+  const deviceId = req.params.id;
+
+  db.get(
+    `SELECT * FROM devices WHERE id = ?`,
+    [deviceId],
+    (err, row) => {
+      if (err || !row) {
+        return res.status(404).json({ error: 'Naprava ni najdena' });
+      }
+
+      // Vrnejo se nastavitve za ESP32
+      res.json({
+        hitrost_motorja: row.hitrost_motorja,
+        ura1_h: row.ura1_h,
+        ura1_min: row.ura1_min,
+        ura2_h: row.ura2_h,
+        ura2_min: row.ura2_min,
+        cas_delovanja: row.cas_delovanja,
+        casovnik2: row.casovnik2,
+        pon: row.pon,
+        tor: row.tor,
+        sre: row.sre,
+        cet: row.cet,
+        pet: row.pet,
+        sob: row.sob,
+        ned: row.ned
+      });
+    }
+  );
 });
 
 module.exports = router;
