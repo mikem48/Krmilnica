@@ -194,7 +194,28 @@ router.post('/data', (req, res) => {
     }
   );
 });
+// Endpoint: POST /device/updateSettings
+// Sprejme: deviceId, value1, value2
+router.post('/updatesettings', (req, res) => {
+  const { deviceId, visina, wifi_cas, obvestilo_napetost, obvestilo_krmilo, obvestilo_stevilka, ura1_h, ura1_min, ura2_h, ura2_min, casovnik2, cas_delovanja, hitrost_motorja, pon, tor, sre, cet, pet, sob, ned } = req.body;
 
+  if (!deviceId || !visina || !wifi_cas || !obvestilo_napetost || !obvestilo_krmilo || !obvestilo_stevilka || !ura1_h || !ura1_min || !ura2_h || !ura2_min || !asovnik2 || !as_delovanja || !hitrost_motorja || !pon || !tor || !sre || !cet || !pet || !sob || !ned) {
+    return res.status(400).json({ error: 'Manjkajoči podatki' });
+  }
+
+
+  db.run(
+    `UPDATE devices SET visina = ?, wifi_cas = ?, obvestilo_napetost = ?, obvestilo_krmilo = ?, obvestilo_stevilka = ?, ura1_h = ?, ura1_min = ?, ura2_h = ?, ura2_min = ?, casovnik2 = ?, cas_delovanja = ?, hitrost_motorja = ?, pon = ?, tor = ?, sre = ?, cet = ?, pet = ?, sob = ?, ned = ? WHERE id = ?`,
+    [visina, wifi_cas, obvestilo_napetost, obvestilo_krmilo, obvestilo_stevilka, ura1_h, ura1_min, ura2_h, ura2_min, casovnik2, cas_delovanja, hitrost_motorja, pon, tor, sre, cet, pet, sob, ned, deviceId],
+    function (err) {
+      if (err) {
+        console.error('Napaka pri posodobitvi podatkov:', err);
+        return res.status(500).json({ error: 'Napaka v bazi' });
+      }
+      res.json({ success: true, message: 'Podatki sprejeti' });
+    }
+  );
+});
 /**
  * Branje parametrov za ESP32
  * URL: /:id/params
