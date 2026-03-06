@@ -131,7 +131,7 @@
           const isOnline = timeDiff < 21600; // naprava online, če je bila aktivna v zadnjih 6 urah
 
           const lastUpdateFormatted = lastUpdate > 0 
-            ? new Date(lastUpdate*1000).toLocaleString('sl-SI')
+            ? new Date(lastUpdate*1000).toLocaleString('sl-SI', { timeZone: 'Europe/Ljubljana' })
             : 'Nikoli';
         %>
         <div class="col-md-6 col-lg-4">

@@ -45,7 +45,7 @@ router.get('/:id/settings', (req, res) => {
       const isOnline = (now - lastUpdate) < 21600;
 
       const lastUpdateFormatted =
-        lastUpdate > 0 ? new Date(lastUpdate * 1000).toLocaleString('sl-SI') : 'Nikoli';
+        lastUpdate > 0 ? new Date(lastUpdate * 1000).toLocaleString('sl-SI', { timeZone: 'Europe/Ljubljana' }) : 'Nikoli';
 
       // Params iz baze
       let params = {};
@@ -218,21 +218,40 @@ router.post('/data', (req, res) => {
   );
 });
 // Endpoint: POST /device/updateSettings
-// Sprejme: deviceId, value1, value2
+// Sprejme: deviceId in katera koli nastavitev (delni vnos je dovoljen)
 router.post('/updatesettings', (req, res) => {
-  const { deviceId, visina, wifi_cas, obvestilo_napetost, obvestilo_krmilo, obvestilo_stevilka, ura1_h, ura1_min, ura2_h, ura2_min, casovnik2, cas_delovanja, hitrost_motorja, pon, tor, sre, cet, pet, sob, ned } = req.body;
+  const { deviceId } = req.body;
   if (!deviceId || !/^[a-zA-Z0-9]{8}$/.test(deviceId)) {
     return res.status(400).send('Neveljaven ID naprave.');
   }
-  if (visina === undefined || wifi_cas === undefined || obvestilo_napetost === undefined || obvestilo_krmilo === undefined || obvestilo_stevilka === undefined || ura1_h === undefined || ura1_min === undefined || ura2_h === undefined || ura2_min === undefined || casovnik2 === undefined || cas_delovanja === undefined || hitrost_motorja === undefined || pon === undefined || tor === undefined || sre === undefined || cet === undefined || pet === undefined || sob === undefined || ned === undefined) {
-     console.log("manjkajoči podatki");
-    return res.status(400).json({ error: 'Manjkajoči podatki' });
+
+  const allowedFields = [
+    'visina', 'wifi_cas', 'obvestilo_napetost', 'obvestilo_krmilo', 'obvestilo_stevilka',
+    'ura1_h', 'ura1_min', 'ura2_h', 'ura2_min', 'casovnik2', 'cas_delovanja',
+    'hitrost_motorja', 'pon', 'tor', 'sre', 'cet', 'pet', 'sob', 'ned'
+  ];
+
+  const setClauses = [];
+  const params = [];
+
+  // Field names come from the hardcoded allowedFields list, not from user input.
+  // Values use parameterized queries (?), so there is no SQL injection risk.
+  allowedFields.forEach(field => {
+    if (req.body[field] !== undefined) {
+      setClauses.push(`${field} = ?`);
+      params.push(req.body[field]);
+    }
+  });
+
+  if (setClauses.length === 0) {
+    return res.status(400).json({ error: 'Ni polj za posodobitev' });
   }
 
+  params.push(deviceId);
 
   db.run(
-    `UPDATE devices SET visina = ?, wifi_cas = ?, obvestilo_napetost = ?, obvestilo_krmilo = ?, obvestilo_stevilka = ?, ura1_h = ?, ura1_min = ?, ura2_h = ?, ura2_min = ?, casovnik2 = ?, cas_delovanja = ?, hitrost_motorja = ?, pon = ?, tor = ?, sre = ?, cet = ?, pet = ?, sob = ?, ned = ? WHERE id = ?`,
-    [visina, wifi_cas, obvestilo_napetost, obvestilo_krmilo, obvestilo_stevilka, ura1_h, ura1_min, ura2_h, ura2_min, casovnik2, cas_delovanja, hitrost_motorja, pon, tor, sre, cet, pet, sob, ned, deviceId],
+    `UPDATE devices SET ${setClauses.join(', ')} WHERE id = ?`,
+    params,
     (err) => {
       if (err) {
         console.error('Napaka pri posodabljanju vrednosti:', err);
