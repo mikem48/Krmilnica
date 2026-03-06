@@ -9,7 +9,7 @@ db.serialize(() => {
       value2 REAL,
       last_update INTEGER,
       firmware_version TEXT,
-      params TEXT
+      params TEXT,
       
       visina REAL DEFAULT 0,
       wifi_cas INTEGER DEFAULT 60,
