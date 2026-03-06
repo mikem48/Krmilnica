@@ -288,6 +288,32 @@ db.serialize(() => {
         });
       });
 
+      // Migriraj tabelo users - dodaj stolpec password če manjka (prej password_hash)
+      db.serialize(() => {
+        db.all('PRAGMA table_info(users)', (err, columns) => {
+          if (err || !columns) {
+            console.error('Napaka pri preverjanju stolpcev tabele users:', err);
+            return;
+          }
+          const colNames = columns.map(c => c.name);
+          if (!colNames.includes('password')) {
+            db.run('ALTER TABLE users ADD COLUMN password TEXT', (err) => {
+              if (err) {
+                console.error('Napaka pri dodajanju stolpca password:', err);
+              } else {
+                console.log('✓ Stolpec password dodan v tabelo users');
+                if (colNames.includes('password_hash')) {
+                  db.run('UPDATE users SET password = password_hash WHERE password IS NULL', (err) => {
+                    if (err) console.error('Napaka pri kopiranju gesel:', err);
+                    else console.log('✓ Gesla prenesena iz password_hash v password');
+                  });
+                }
+              }
+            });
+          }
+        });
+      });
+
       // Ustvari testnega admin uporabnika
       const testUsername = 'admin';
       const testPassword = 'admin123';
