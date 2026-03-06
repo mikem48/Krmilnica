@@ -35,7 +35,7 @@ router.post('/data', (req, res) => {
 router.post('/updatesettings', (req, res) => {
   const { deviceId, visina, wifi_cas, obvestilo_napetost, obvestilo_krmilo, obvestilo_stevilka, ura1_h, ura1_min, ura2_h, ura2_min, casovnik2, cas_delovanja, hitrost_motorja, pon, tor, sre, cet, pet, sob, ned } = req.body;
 
-  if (!deviceId || !visina || !wifi_cas || !obvestilo_napetost || !obvestilo_krmilo || !obvestilo_stevilka || !ura1_h || !ura1_min || !ura2_h || !ura2_min || !casovnik2 || !cas_delovanja || !hitrost_motorja || !pon || !tor || !sre || !cet || !pet || !sob || !ned) {
+  if (!deviceId || visina === undefined || wifi_cas === undefined || obvestilo_napetost === undefined || obvestilo_krmilo === undefined || obvestilo_stevilka === undefined || ura1_h === undefined || ura1_min === undefined || ura2_h === undefined || ura2_min === undefined || casovnik2 === undefined || cas_delovanja === undefined || hitrost_motorja === undefined || pon === undefined || tor === undefined || sre === undefined || cet === undefined || pet === undefined || sob === undefined || ned === undefined) {
     return res.status(400).json({ error: 'Manjkajoči podatki' });
   }
 
@@ -69,13 +69,13 @@ router.post('/:id/settings', (req, res) => {
     pon, tor, sre, cet, pet, sob, ned
   } = req.body;
 
-  // Preveri, ali ima uporabnik dostop do te naprave
+  // ESP32 se avtenticira z device ID - preveri samo, ali naprava obstaja
   db.get(
-    `SELECT user_id FROM user_devices WHERE device_id = ? AND user_id = ?`,
-    [deviceId, req.user.id],
+    `SELECT id FROM devices WHERE id = ?`,
+    [deviceId],
     (err, row) => {
       if (err || !row) {
-        return res.status(403).json({ error: 'Dostop zavrnjen' });
+        return res.status(403).json({ error: 'Naprava ne obstaja' });
       }
 
       // Posodobi nastavitve v bazi

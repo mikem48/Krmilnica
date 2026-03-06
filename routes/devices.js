@@ -201,7 +201,7 @@ router.post('/updatesettings', (req, res) => {
   if (!deviceId || !/^[a-zA-Z0-9]{8}$/.test(deviceId)) {
     return res.status(400).send('Neveljaven ID naprave.');
   }
-  if (!deviceId || !visina || !wifi_cas || !obvestilo_napetost || !obvestilo_krmilo || !obvestilo_stevilka || !ura1_h || !ura1_min || !ura2_h || !ura2_min || !asovnik2 || !as_delovanja || !hitrost_motorja || !pon || !tor || !sre || !cet || !pet || !sob || !ned) {
+  if (visina === undefined || wifi_cas === undefined || obvestilo_napetost === undefined || obvestilo_krmilo === undefined || obvestilo_stevilka === undefined || ura1_h === undefined || ura1_min === undefined || ura2_h === undefined || ura2_min === undefined || casovnik2 === undefined || cas_delovanja === undefined || hitrost_motorja === undefined || pon === undefined || tor === undefined || sre === undefined || cet === undefined || pet === undefined || sob === undefined || ned === undefined) {
      console.log("manjkajoči podatki");
     return res.status(400).json({ error: 'Manjkajoči podatki' });
   }
