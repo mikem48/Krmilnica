@@ -42,7 +42,7 @@ router.get('/:id/settings', (req, res) => {
       // Izračun online statusa (online, če je aktivna v zadnjih 5 minutah)
       const now = Math.floor(Date.now() / 1000);
       const lastUpdate = device.last_update || 0;
-      const isOnline = (now - lastUpdate) < 300;
+      const isOnline = (now - lastUpdate) < 21600;
 
       const lastUpdateFormatted =
         lastUpdate > 0 ? new Date(lastUpdate * 1000).toLocaleString('sl-SI') : 'Nikoli';
