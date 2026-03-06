@@ -243,8 +243,8 @@
                       </td>
                       <td>
                         <small>
-                          <i class="bi bi-calendar"></i> <%= date.toLocaleDateString('sl-SI') %><br>
-                          <i class="bi bi-clock"></i> <%= date.toLocaleTimeString('sl-SI') %>
+                          <i class="bi bi-calendar"></i> <%= date.toLocaleDateString('sl-SI', { timeZone: 'Europe/Ljubljana' }) %><br>
+                          <i class="bi bi-clock"></i> <%= date.toLocaleTimeString('sl-SI', { timeZone: 'Europe/Ljubljana' }) %>
                         </small>
                       </td>
                       <td>

@@ -31,18 +31,41 @@ router.post('/data', (req, res) => {
   );
 });
 // Endpoint: POST /device/updateSettings
-// Sprejme: deviceId, value1, value2
+// Sprejme: deviceId in katera koli nastavitev (delni vnos je dovoljen)
 router.post('/updatesettings', (req, res) => {
-  const { deviceId, visina, wifi_cas, obvestilo_napetost, obvestilo_krmilo, obvestilo_stevilka, ura1_h, ura1_min, ura2_h, ura2_min, casovnik2, cas_delovanja, hitrost_motorja, pon, tor, sre, cet, pet, sob, ned } = req.body;
+  const { deviceId } = req.body;
 
-  if (!deviceId || visina === undefined || wifi_cas === undefined || obvestilo_napetost === undefined || obvestilo_krmilo === undefined || obvestilo_stevilka === undefined || ura1_h === undefined || ura1_min === undefined || ura2_h === undefined || ura2_min === undefined || casovnik2 === undefined || cas_delovanja === undefined || hitrost_motorja === undefined || pon === undefined || tor === undefined || sre === undefined || cet === undefined || pet === undefined || sob === undefined || ned === undefined) {
+  if (!deviceId) {
     return res.status(400).json({ error: 'Manjkajoči podatki' });
   }
 
+  const allowedFields = [
+    'visina', 'wifi_cas', 'obvestilo_napetost', 'obvestilo_krmilo', 'obvestilo_stevilka',
+    'ura1_h', 'ura1_min', 'ura2_h', 'ura2_min', 'casovnik2', 'cas_delovanja',
+    'hitrost_motorja', 'pon', 'tor', 'sre', 'cet', 'pet', 'sob', 'ned'
+  ];
+
+  const setClauses = [];
+  const params = [];
+
+  // Field names come from the hardcoded allowedFields list, not from user input.
+  // Values use parameterized queries (?), so there is no SQL injection risk.
+  allowedFields.forEach(field => {
+    if (req.body[field] !== undefined) {
+      setClauses.push(`${field} = ?`);
+      params.push(req.body[field]);
+    }
+  });
+
+  if (setClauses.length === 0) {
+    return res.status(400).json({ error: 'Ni polj za posodobitev' });
+  }
+
+  params.push(deviceId);
 
   db.run(
-    `UPDATE devices SET visina = ?, wifi_cas = ?, obvestilo_napetost = ?, obvestilo_krmilo = ?, obvestilo_stevilka = ?, ura1_h = ?, ura1_min = ?, ura2_h = ?, ura2_min = ?, casovnik2 = ?, cas_delovanja = ?, hitrost_motorja = ?, pon = ?, tor = ?, sre = ?, cet = ?, pet = ?, sob = ?, ned = ? WHERE id = ?`,
-    [visina, wifi_cas, obvestilo_napetost, obvestilo_krmilo, obvestilo_stevilka, ura1_h, ura1_min, ura2_h, ura2_min, casovnik2, cas_delovanja, hitrost_motorja, pon, tor, sre, cet, pet, sob, ned, deviceId],
+    `UPDATE devices SET ${setClauses.join(', ')} WHERE id = ?`,
+    params,
     function (err) {
       if (err) {
         console.error('Napaka pri posodobitvi podatkov:', err);
@@ -60,14 +83,6 @@ router.post('/updatesettings', (req, res) => {
 // Sprejme: hitrost_motorja, ura1_h, ura1_min, ura2_h, ura2_min, cas_delovanja, casovnik2, dnevi
 router.post('/:id/settings', (req, res) => {
   const deviceId = req.params.id;
-  const {
-    hitrost_motorja,
-    ura1_h, ura1_min,
-    ura2_h, ura2_min,
-    cas_delovanja,
-    casovnik2,
-    pon, tor, sre, cet, pet, sob, ned
-  } = req.body;
 
   // ESP32 se avtenticira z device ID - preveri samo, ali naprava obstaja
   db.get(
@@ -78,26 +93,28 @@ router.post('/:id/settings', (req, res) => {
         return res.status(403).json({ error: 'Naprava ne obstaja' });
       }
 
-      // Posodobi nastavitve v bazi
-      const sql = `
-        UPDATE devices SET 
-          hitrost_motorja = ?,
-          ura1_h = ?, ura1_min = ?,
-          ura2_h = ?, ura2_min = ?,
-          cas_delovanja = ?,
-          casovnik2 = ?,
-          pon = ?, tor = ?, sre = ?, cet = ?, pet = ?, sob = ?, ned = ?,
-          last_update = ?
-        WHERE id = ?
-      `;
-
-      const params = [
-        hitrost_motorja, ura1_h, ura1_min,
-        ura2_h, ura2_min, cas_delovanja,
-        casovnik2,
-        pon, tor, sre, cet, pet, sob, ned,
-        Math.floor(Date.now() / 1000), deviceId
+      const allowedFields = [
+        'hitrost_motorja', 'ura1_h', 'ura1_min', 'ura2_h', 'ura2_min',
+        'cas_delovanja', 'casovnik2', 'pon', 'tor', 'sre', 'cet', 'pet', 'sob', 'ned'
       ];
+
+      const setClauses = [];
+      const params = [];
+
+      // Field names come from the hardcoded allowedFields list, not from user input.
+      // Values use parameterized queries (?), so there is no SQL injection risk.
+      allowedFields.forEach(field => {
+        if (req.body[field] !== undefined) {
+          setClauses.push(`${field} = ?`);
+          params.push(req.body[field]);
+        }
+      });
+
+      setClauses.push('last_update = ?');
+      params.push(Math.floor(Date.now() / 1000));
+      params.push(deviceId);
+
+      const sql = `UPDATE devices SET ${setClauses.join(', ')} WHERE id = ?`;
 
       db.run(sql, params, function (err) {
         if (err) {
