@@ -35,7 +35,7 @@ router.post('/data', (req, res) => {
 router.post('/updatesettings', (req, res) => {
   const { deviceId, visina, wifi_cas, obvestilo_napetost, obvestilo_krmilo, obvestilo_stevilka, ura1_h, ura1_min, ura2_h, ura2_min, casovnik2, cas_delovanja, hitrost_motorja, pon, tor, sre, cet, pet, sob, ned } = req.body;
 
-  if (!deviceId || !visina || !wifi_cas || !obvestilo_napetost || !obvestilo_krmilo || !obvestilo_stevilka || !ura1_h || !ura1_min || !ura2_h || !ura2_min || !asovnik2 || !as_delovanja || !hitrost_motorja || !pon || !tor || !sre || !cet || !pet || !sob || !ned) {
+  if (!deviceId || !visina || !wifi_cas || !obvestilo_napetost || !obvestilo_krmilo || !obvestilo_stevilka || !ura1_h || !ura1_min || !ura2_h || !ura2_min || !casovnik2 || !cas_delovanja || !hitrost_motorja || !pon || !tor || !sre || !cet || !pet || !sob || !ned) {
     return res.status(400).json({ error: 'Manjkajoči podatki' });
   }
 
