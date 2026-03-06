@@ -246,7 +246,48 @@ db.serialize(() => {
       process.exit(1);
     } else {
       console.log('Tabele ustvarjene.');
-      
+
+      // Migriraj obstoječe tabele - dodaj manjkajoče stolpce
+      const deviceColumns = [
+        { name: 'visina', type: 'REAL DEFAULT 0' },
+        { name: 'wifi_cas', type: 'INTEGER DEFAULT 60' },
+        { name: 'obvestilo_napetost', type: 'REAL DEFAULT 12.5' },
+        { name: 'obvestilo_krmilo', type: 'REAL DEFAULT 80' },
+        { name: 'obvestilo_stevilka', type: "TEXT DEFAULT ''" },
+        { name: 'ura1_h', type: 'INTEGER DEFAULT 0' },
+        { name: 'ura1_min', type: 'INTEGER DEFAULT 0' },
+        { name: 'ura2_h', type: 'INTEGER DEFAULT 0' },
+        { name: 'ura2_min', type: 'INTEGER DEFAULT 0' },
+        { name: 'casovnik2', type: 'INTEGER DEFAULT 0' },
+        { name: 'cas_delovanja', type: 'INTEGER DEFAULT 60' },
+        { name: 'hitrost_motorja', type: 'INTEGER DEFAULT 100' },
+        { name: 'pon', type: 'INTEGER DEFAULT 0' },
+        { name: 'tor', type: 'INTEGER DEFAULT 0' },
+        { name: 'sre', type: 'INTEGER DEFAULT 0' },
+        { name: 'cet', type: 'INTEGER DEFAULT 0' },
+        { name: 'pet', type: 'INTEGER DEFAULT 0' },
+        { name: 'sob', type: 'INTEGER DEFAULT 0' },
+        { name: 'ned', type: 'INTEGER DEFAULT 0' }
+      ];
+
+      db.serialize(() => {
+        db.all('PRAGMA table_info(devices)', (err, columns) => {
+          if (err || !columns) {
+            console.error('Napaka pri preverjanju stolpcev tabele devices:', err);
+            return;
+          }
+          const existing = columns.map(c => c.name);
+          deviceColumns.forEach(col => {
+            if (!existing.includes(col.name)) {
+              db.run(`ALTER TABLE devices ADD COLUMN ${col.name} ${col.type}`, (err) => {
+                if (err) console.error(`Napaka pri dodajanju stolpca ${col.name}:`, err);
+                else console.log(`✓ Stolpec ${col.name} dodan v tabelo devices`);
+              });
+            }
+          });
+        });
+      });
+
       // Ustvari testnega admin uporabnika
       const testUsername = 'admin';
       const testPassword = 'admin123';
