@@ -198,8 +198,11 @@ router.post('/data', (req, res) => {
 // Sprejme: deviceId, value1, value2
 router.post('/updatesettings', (req, res) => {
   const { deviceId, visina, wifi_cas, obvestilo_napetost, obvestilo_krmilo, obvestilo_stevilka, ura1_h, ura1_min, ura2_h, ura2_min, casovnik2, cas_delovanja, hitrost_motorja, pon, tor, sre, cet, pet, sob, ned } = req.body;
-
+  if (!deviceId || !/^[a-zA-Z0-9]{8}$/.test(deviceId)) {
+    return res.status(400).send('Neveljaven ID naprave.');
+  }
   if (!deviceId || !visina || !wifi_cas || !obvestilo_napetost || !obvestilo_krmilo || !obvestilo_stevilka || !ura1_h || !ura1_min || !ura2_h || !ura2_min || !asovnik2 || !as_delovanja || !hitrost_motorja || !pon || !tor || !sre || !cet || !pet || !sob || !ned) {
+     console.log("manjkajoči podatki");
     return res.status(400).json({ error: 'Manjkajoči podatki' });
   }
 
@@ -207,11 +210,12 @@ router.post('/updatesettings', (req, res) => {
   db.run(
     `UPDATE devices SET visina = ?, wifi_cas = ?, obvestilo_napetost = ?, obvestilo_krmilo = ?, obvestilo_stevilka = ?, ura1_h = ?, ura1_min = ?, ura2_h = ?, ura2_min = ?, casovnik2 = ?, cas_delovanja = ?, hitrost_motorja = ?, pon = ?, tor = ?, sre = ?, cet = ?, pet = ?, sob = ?, ned = ? WHERE id = ?`,
     [visina, wifi_cas, obvestilo_napetost, obvestilo_krmilo, obvestilo_stevilka, ura1_h, ura1_min, ura2_h, ura2_min, casovnik2, cas_delovanja, hitrost_motorja, pon, tor, sre, cet, pet, sob, ned, deviceId],
-    function (err) {
+    (err) {
       if (err) {
         console.error('Napaka pri posodobitvi podatkov:', err);
         return res.status(500).json({ error: 'Napaka v bazi' });
       }
+      console.log("manjkajoči podatki", visina, wifi_cas, obvestilo_napetost, obvestilo_krmilo, obvestilo_stevilka, ura1_h, ura1_min, ura2_h, ura2_min, casovnik2, cas_delovanja, hitrost_motorja, pon, tor, sre, cet, pet, sob, ned, deviceId);
       res.json({ success: true, message: 'Podatki sprejeti' });
     }
   );
