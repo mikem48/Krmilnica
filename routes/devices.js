@@ -210,13 +210,12 @@ router.post('/updatesettings', (req, res) => {
   db.run(
     `UPDATE devices SET visina = ?, wifi_cas = ?, obvestilo_napetost = ?, obvestilo_krmilo = ?, obvestilo_stevilka = ?, ura1_h = ?, ura1_min = ?, ura2_h = ?, ura2_min = ?, casovnik2 = ?, cas_delovanja = ?, hitrost_motorja = ?, pon = ?, tor = ?, sre = ?, cet = ?, pet = ?, sob = ?, ned = ? WHERE id = ?`,
     [visina, wifi_cas, obvestilo_napetost, obvestilo_krmilo, obvestilo_stevilka, ura1_h, ura1_min, ura2_h, ura2_min, casovnik2, cas_delovanja, hitrost_motorja, pon, tor, sre, cet, pet, sob, ned, deviceId],
-    (err) {
+    (err) => {
       if (err) {
-        console.error('Napaka pri posodobitvi podatkov:', err);
-        return res.status(500).json({ error: 'Napaka v bazi' });
+        console.error('Napaka pri posodabljanju vrednosti:', err);
+        return res.status(500).send('Napaka v bazi.');
       }
-      console.log("manjkajoči podatki", visina, wifi_cas, obvestilo_napetost, obvestilo_krmilo, obvestilo_stevilka, ura1_h, ura1_min, ura2_h, ura2_min, casovnik2, cas_delovanja, hitrost_motorja, pon, tor, sre, cet, pet, sob, ned, deviceId);
-      res.json({ success: true, message: 'Podatki sprejeti' });
+      res.send('OK');
     }
   );
 });
