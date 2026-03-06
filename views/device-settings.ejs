@@ -56,6 +56,10 @@
       padding: 8px 20px;
     }
     .section-title { font-weight: 700; margin-bottom: 0.75rem; }
+    .input-prefilled {
+      color: #6c757d;
+      font-style: italic;
+    }
   </style>
 </head>
 
@@ -621,6 +625,23 @@
           if (!ok) e.preventDefault();
         });
       }
+
+      // Vizualno označi pred-izpolnjena polja kot placeholder (siva barva)
+      function updatePrefillStyle(input) {
+        const original = input.dataset.original ?? '';
+        const current = input.value ?? '';
+        if (original !== '' && String(original) === String(current)) {
+          input.classList.add('input-prefilled');
+        } else {
+          input.classList.remove('input-prefilled');
+        }
+      }
+
+      form.querySelectorAll('input[type="text"], input[type="number"]').forEach((input) => {
+        updatePrefillStyle(input);
+        input.addEventListener('input', () => updatePrefillStyle(input));
+        input.addEventListener('change', () => updatePrefillStyle(input));
+      });
     })();
   </script>
 </body>
