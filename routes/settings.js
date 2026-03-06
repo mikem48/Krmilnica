@@ -134,28 +134,34 @@ router.post('/:id/settings', (req, res) => {
 // Endpoint: GET /device/:id/check-update?version=...
 router.get('/:id/check-update', (req, res) => {
   const deviceId = req.params.id;
-  const { version } = req.query;
+  const currentVersion = req.query.version || 'krmilnica_01.01.24';
 
-  // Preveri, ali ima uporabnik dostop do te naprave
-  db.get(
-    `SELECT user_id FROM user_devices WHERE device_id = ? AND user_id = ?`,
-    [deviceId, req.user.id],
-    (err, row) => {
-      if (err || !row) {
-        return res.status(403).json({ error: 'Dostop zavrnjen' });
-      }
+  // Posodobitev trenutne verzije v bazi naprave (brez auth)
+  db.run('UPDATE devices SET firmware_version = ? WHERE id = ?', [currentVersion, deviceId]);
 
-      // Primer: če je verzija starejša od trenutne
-      const currentVersion = 'krmilnica_20.01.26';
-      const updateAvailable = version !== currentVersion;
-
-      res.json({
-        updateAvailable: updateAvailable,
-        latestVersion: currentVersion,
-        downloadUrl: updateAvailable ? `https://github.com/mikem48/Krmilnica/releases/download/v${currentVersion}/firmware.bin` : null
-      });
+  db.get('SELECT * FROM firmware ORDER BY upload_date DESC LIMIT 1', [], (err, firmware) => {
+    if (err || !firmware) {
+      return res.json({ updateAvailable: false });
     }
-  );
+
+    // Pretvorba verzije za primerjavo: krmilnica_DD.MM.YY -> YYYYMMDD
+    const parseVersion = (v) => {
+      const m = v.match(/krmilnica_(\d{2})\.(\d{2})\.(\d{2})/);
+      if (!m) return 0;
+      return parseInt(`20${m[3]}${m[2]}${m[1]}`, 10);
+    };
+
+    const currentVerNum = parseVersion(currentVersion);
+    const latestVerNum = parseVersion(firmware.version);
+    const updateAvailable = latestVerNum > currentVerNum;
+
+    res.json({
+      updateAvailable,
+      currentVersion,
+      latestVersion: firmware.version,
+      downloadUrl: updateAvailable ? `${req.protocol}://${req.get('host')}${firmware.file_path}` : null
+    });
+  });
 });
 
 // ===========================
