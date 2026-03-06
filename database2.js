@@ -59,6 +59,7 @@ db.serialize(() => {
     CREATE TABLE IF NOT EXISTS firmware (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       version TEXT,
+      filename TEXT,
       file_path TEXT,
       upload_date INTEGER
     )

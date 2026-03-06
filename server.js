@@ -314,6 +314,23 @@ db.serialize(() => {
         });
       });
 
+      // Migriraj tabelo firmware - dodaj stolpec filename če manjka
+      db.serialize(() => {
+        db.all('PRAGMA table_info(firmware)', (err, columns) => {
+          if (err || !columns) {
+            console.error('Napaka pri preverjanju stolpcev tabele firmware:', err);
+            return;
+          }
+          const colNames = columns.map(c => c.name);
+          if (!colNames.includes('filename')) {
+            db.run('ALTER TABLE firmware ADD COLUMN filename TEXT', (err) => {
+              if (err) console.error('Napaka pri dodajanju stolpca filename:', err);
+              else console.log('✓ Stolpec filename dodan v tabelo firmware');
+            });
+          }
+        });
+      });
+
       // Ustvari testnega admin uporabnika
       const testUsername = 'admin';
       const testPassword = 'admin123';
