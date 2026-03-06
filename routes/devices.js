@@ -56,9 +56,32 @@ router.get('/:id/settings', (req, res) => {
         params = {};
       }
 
+      // Pretvori SQLite integer (0/1) ali boolean v pravi JS boolean
+      const toBool = (v) => v === 1 || v === true;
+
       // Objekt, ki ga uporablja device-settings.ejs
+      // Individualne kolumne (iz updatesettings) imajo prednost pred params JSON
       const settings = {
         ...params,
+        visina: device.visina,
+        wifi_cas: device.wifi_cas,
+        obvestilo_napetost: device.obvestilo_napetost,
+        obvestilo_krmilo: device.obvestilo_krmilo,
+        obvestilo_stevilka: device.obvestilo_stevilka,
+        ura1_h: device.ura1_h,
+        ura1_min: device.ura1_min,
+        ura2_h: device.ura2_h,
+        ura2_min: device.ura2_min,
+        casovnik2: toBool(device.casovnik2),
+        cas_delovanja: device.cas_delovanja,
+        hitrost_motorja: device.hitrost_motorja,
+        pon: toBool(device.pon),
+        tor: toBool(device.tor),
+        sre: toBool(device.sre),
+        cet: toBool(device.cet),
+        pet: toBool(device.pet),
+        sob: toBool(device.sob),
+        ned: toBool(device.ned),
         device_id: device.id,
         device_name: device.name,
         value1: device.value1,
