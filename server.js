@@ -154,9 +154,10 @@ app.post('/admin/upload-firmware', upload.single('firmware'), (req, res) => {
   const filename = req.file.originalname;
   const filePath = `/firmware/${filename}`;
   const uploadDate = Math.floor(Date.now() / 1000);
+  const fileSize = req.file.size;
 
-  db.run('INSERT INTO firmware (version, filename, upload_date, file_path) VALUES (?, ?, ?, ?)',
-    [version, filename, uploadDate, filePath], (err) => {
+  db.run('INSERT INTO firmware (version, filename, upload_date, file_path, file_size) VALUES (?, ?, ?, ?, ?)',
+    [version, filename, uploadDate, filePath, fileSize], (err) => {
       if (err) {
         console.error('Napaka pri nalaganju firmware:', err);
         return res.send('Firmware z to verzijo že obstaja.');

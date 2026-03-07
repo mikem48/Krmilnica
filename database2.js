@@ -61,9 +61,16 @@ db.serialize(() => {
       version TEXT,
       filename TEXT,
       file_path TEXT,
-      upload_date INTEGER
+      upload_date INTEGER,
+      file_size INTEGER DEFAULT 0
     )
   `);
+
+  db.run(`ALTER TABLE firmware ADD COLUMN file_size INTEGER DEFAULT 0`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Migration error (firmware.file_size):', err.message);
+    }
+  });
 });
 
 module.exports = db;
