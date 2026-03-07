@@ -324,6 +324,7 @@ router.get('/:id/check-update', (req, res) => {
       updateAvailable,
       currentVersion,
       latestVersion: firmware.version,
+      fileSize: firmware.file_size || 0,
       downloadUrl: updateAvailable ? `http://${req.get('host')}${firmware.file_path}` : null
     });
   });
