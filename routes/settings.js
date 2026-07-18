@@ -5,7 +5,7 @@ const db = require('../database');
 
 // ===========================
 // SPREJEM PODATKOV (ESP32 -> Server)
-// ===========================
+
 
 // Endpoint: POST /device/data
 // Sprejme: deviceId, value1, value2
