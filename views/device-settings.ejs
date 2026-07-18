@@ -114,7 +114,7 @@
               <%= settings.device_name || 'krmilnica1' %>
             </span>
 
-            <span class="<%= index.isonline ? 'status-online' : 'status-offline' %>">
+            <span class="<%= settings.isOnline ? 'status-online' : 'status-offline' %>">
               <i class="bi bi-circle-fill"></i> <%= settings.online ? 'Online' : 'Offline' %>
             </span>
           </div>
