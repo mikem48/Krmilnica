@@ -129,7 +129,7 @@
           const lastUpdate = device.last_update || 0;
           const timeDiff = now - lastUpdate;
           const isOnline = timeDiff < 21600; // naprava online, če je bila aktivna v zadnjih 6 urah
-
+          device.value0 = isOnline;
           const lastUpdateFormatted = lastUpdate > 0 
             ? new Date(lastUpdate*1000).toLocaleString('sl-SI', { timeZone: 'Europe/Ljubljana' })
             : 'Nikoli';
