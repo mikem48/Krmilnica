@@ -1,10 +1,11 @@
-// routes/devices.js
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
 
 // SPREJEM PODATKOV (ESP32 -> Server)
-
 
 // Endpoint: POST /device/data
 // Sprejme: deviceId, value1, value2
@@ -29,6 +30,7 @@ router.post('/data', (req, res) => {
     }
   );
 });
+
 // Endpoint: POST /device/updateSettings
 // Sprejme: deviceId in katera koli nastavitev (delni vnos je dovoljen)
 router.post('/updatesettings', (req, res) => {
@@ -74,6 +76,7 @@ router.post('/updatesettings', (req, res) => {
     }
   );
 });
+
 // ===========================
 // SPREJEM NASTAVITEV (ESP32 -> Server)
 // ===========================
@@ -140,12 +143,12 @@ router.get('/:id/check-update', (req, res) => {
 
   db.get('SELECT * FROM firmware ORDER BY upload_date DESC LIMIT 1', [], (err, firmware) => {
     if (err || !firmware) {
-      return res.json({ updateAvailable: false });
+      return res.json({ updateAvailable: false, md5: null, fileSize: 0 });
     }
 
     // Pretvorba verzije za primerjavo: krmilnica_DD.MM.YY -> YYYYMMDD
     const parseVersion = (v) => {
-      const m = v.match(/krmilnica_(\d{2})\.(\d{2})\.(\d{2})/);
+      const m = String(v || '').match(/krmilnica_(\d{2})\.(\d{2})\.(\d{2})/);
       if (!m) return 0;
       return parseInt(`20${m[3]}${m[2]}${m[1]}`, 10);
     };
@@ -153,26 +156,29 @@ router.get('/:id/check-update', (req, res) => {
     const currentVerNum = parseVersion(currentVersion);
     const latestVerNum = parseVersion(firmware.version);
     const updateAvailable = latestVerNum > currentVerNum;
+
     let md5 = null;
-    let fileSize = null;
-    if (updateAvailable) {
-      // Adjust this path to match where your firmware files are stored
-    const absPath = path.join(__dirname, '..', 'public', firmware.file_path);
-    try {
-    const data = fs.readFileSync(absPath);
-    md5 = crypto.createHash('md5').update(data).digest('hex');
-    fileSize = data.length;
-    } catch (e) {
-    console.error('Could not read firmware file for MD5:', e.message);
+    let fileSize = 0;
+
+    if (updateAvailable && firmware.file_path) {
+      try {
+        const relPath = String(firmware.file_path).replace(/^\/+/, '');
+        const absPath = path.join(__dirname, '..', 'public', relPath);
+        const data = fs.readFileSync(absPath);
+        md5 = crypto.createHash('md5').update(data).digest('hex');
+        fileSize = data.length;
+      } catch (e) {
+        console.error('Could not read firmware file for MD5:', e.message);
+      }
     }
-  }
+
     res.json({
       updateAvailable,
       currentVersion,
       latestVersion: firmware.version,
       downloadUrl: updateAvailable ? `${req.protocol}://${req.get('host')}${firmware.file_path}` : null,
-      md5: md5,
-      fileSize: fileSize
+      md5,
+      fileSize
     });
   });
 });
