@@ -86,7 +86,7 @@ router.get('/:id/settings', (req, res) => {
         device_name: device.name,
         value1: device.value1,
         value2: device.value2,
-        online: device.isOnline,
+        online: isOnline,
         last_update: lastUpdateFormatted
       };
 
@@ -325,6 +325,7 @@ router.get('/:id/check-update', (req, res) => {
       currentVersion,
       latestVersion: firmware.version,
       fileSize: firmware.file_size || 0,
+      md5: firmware.md5 || null,              // ADD: send MD5 to ESP32
       downloadUrl: updateAvailable ? `http://${req.get('host')}${firmware.file_path}` : null
     });
   });
