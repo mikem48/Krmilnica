@@ -154,12 +154,26 @@ router.get('/:id/check-update', (req, res) => {
     const currentVerNum = parseVersion(currentVersion);
     const latestVerNum = parseVersion(firmware.version);
     const updateAvailable = latestVerNum > currentVerNum;
-
+    let md5 = null;
+    let fileSize = null;
+    if (updateAvailable) {
+      // Adjust this path to match where your firmware files are stored
+    const absPath = path.join(__dirname, '..', 'public', firmware.file_path);
+    try {
+    const data = fs.readFileSync(absPath);
+    md5 = crypto.createHash('md5').update(data).digest('hex');
+    fileSize = data.length;
+    } catch (e) {
+    console.error('Could not read firmware file for MD5:', e.message);
+    }
+  }
     res.json({
       updateAvailable,
       currentVersion,
       latestVersion: firmware.version,
       downloadUrl: updateAvailable ? `${req.protocol}://${req.get('host')}${firmware.file_path}` : null
+      md5: md5,
+      fileSize: fileSize
     });
   });
 });
