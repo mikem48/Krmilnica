@@ -3,7 +3,6 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 
-// ===========================
 // SPREJEM PODATKOV (ESP32 -> Server)
 
 
