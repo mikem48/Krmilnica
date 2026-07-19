@@ -19,7 +19,7 @@ router.post('/data', (req, res) => {
   const lastUpdate = Math.floor(Date.now() / 1000);
 
   db.run(
-    `UPDATE devices SET value1 = ?, value2 = ?, last_update = ? WHERE id = ?`,
+    `UPDATE device SET value1 = ?, value2 = ?, last_update = ? WHERE id = ?`,
     [value1, value2, lastUpdate, deviceId],
     function (err) {
       if (err) {
