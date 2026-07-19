@@ -91,7 +91,7 @@ router.get('/:id/settings', (req, res) => {
   device_name: device?.name ?? params.device_name,
   value1: device?.value1 ?? params.value1 ?? null,
   value2: device?.value2 ?? params.value2 ?? null,
-  online: device?.isOnline ?? params.online ?? false,
+  online: isOnline,
   last_update: lastUpdateFormatted
       };
 onsole.log('device row:', device);
