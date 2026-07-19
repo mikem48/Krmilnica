@@ -59,9 +59,7 @@ router.get('/:id/settings', (req, res) => {
       // Pretvori SQLite integer (0/1) ali boolean v pravi JS boolean
       const toBool = (v) => v === 1 || v === true;
 
-      onsole.log('device row:', device);
-console.log('params row:', params);
-console.log('settings final:', settings);
+      
       // Objekt, ki ga uporablja device-settings.ejs
       // Individualne kolumne (iz updatesettings) imajo prednost pred params JSON
       const settings = {
@@ -96,7 +94,9 @@ console.log('settings final:', settings);
   online: device?.isOnline ?? params.online ?? false,
   last_update: lastUpdateFormatted
       };
-
+onsole.log('device row:', device);
+console.log('params row:', params);
+console.log('settings final:', settings);
       res.render('device-settings', {
         settings,
         latestFirmware: latestFirmware || null,
