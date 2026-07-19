@@ -56,9 +56,11 @@
       padding: 8px 20px;
     }
     .section-title { font-weight: 700; margin-bottom: 0.75rem; }
+    /* replace existing .input-prefilled */
     .input-prefilled {
-      color: #6c757d;
-      font-style: italic;
+      color: #dc3545;   /* red */
+      font-style: normal;
+    font-weight: 600;
     }
   </style>
 </head>
@@ -255,31 +257,52 @@
                 >
               </div>
 
-              <label class="form-label">Ura 2 in minuta:</label>
-              <div class="row g-2 align-items-center mb-3">
-                <div class="col-md-4">
-                  <input
-                    type="number"
-                    class="form-control"
-                    name="ura2_h"
-                    min="0"
-                    max="23"
-                    placeholder="<%= settings.ura2_h != null ? String(settings.ura2_h) : '18' %>"
-                    value="<%= settings.ura2_h != null ? String(settings.ura2_h) : '' %>"
-                    data-original="<%= settings.ura2_h != null ? String(settings.ura2_h) : '' %>"
-                  >
-                <span class="input-group-text">:</span>
-                  <input
-                    type="number"
-                    class="form-control"
-                    name="ura2_min"
-                    min="0"
-                    max="59"
-                    placeholder="<%= settings.ura2_min != null ? String(settings.ura2_min) : '45' %>"
-                    value="<%= settings.ura2_min != null ? String(settings.ura2_min) : '' %>"
-                    data-original="<%= settings.ura2_min != null ? String(settings.ura2_min) : '' %>"
-                  >
-                </div>
+              <!-- Replace the whole "Ura 2 in minuta" block with this -->
+<label class="form-label">Ura 2 in minuta:</label>
+<div class="row g-2 align-items-center mb-3">
+  <div class="col-md-4">
+    <div class="input-group">
+      <input
+        type="number"
+        class="form-control"
+        name="ura2_h"
+        min="0"
+        max="23"
+        placeholder="<%= settings.ura2_h != null ? String(settings.ura2_h) : '18' %>"
+        value="<%= settings.ura2_h != null ? String(settings.ura2_h) : '' %>"
+        data-original="<%= settings.ura2_h != null ? String(settings.ura2_h) : '' %>"
+      >
+      <span class="input-group-text">:</span>
+      <input
+        type="number"
+        class="form-control"
+        name="ura2_min"
+        min="0"
+        max="59"
+        placeholder="<%= settings.ura2_min != null ? String(settings.ura2_min) : '45' %>"
+        value="<%= settings.ura2_min != null ? String(settings.ura2_min) : '' %>"
+        data-original="<%= settings.ura2_min != null ? String(settings.ura2_min) : '' %>"
+      >
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <input type="hidden" name="casovnik2" value="" disabled data-false-for="casovnik2">
+
+    <div class="form-check">
+      <input
+        class="form-check-input"
+        type="checkbox"
+        name="casovnik2"
+        id="casovnik2"
+        value="1"
+        data-original="<%= settings.casovnik2 ? '1' : '0' %>"
+        <%= settings.casovnik2 ? "checked" : "" %>
+      >
+      <label class="form-check-label" for="casovnik2">časovnik 2</label>
+    </div>
+  </div>
+</div>
 
                 <div class="col-md-3">
                   <input type="hidden" name="casovnik2" value="" disabled data-false-for="casovnik2">
@@ -554,14 +577,13 @@
 
       // Vizualno označi pred-izpolnjena polja kot placeholder (siva barva)
       function updatePrefillStyle(input) {
-        const original = input.dataset.original ?? '';
-        const current = input.value ?? '';
-        if (original !== '' && String(original) === String(current)) {
-          input.classList.add('input-prefilled');
-        } else {
-          input.classList.remove('input-prefilled');
-        }
-      }
+  const hasDbValue = (input.dataset.original ?? '') !== '';
+  if (hasDbValue) {
+    input.classList.add('input-prefilled');
+  } else {
+    input.classList.remove('input-prefilled');
+  }
+}
 
       form.querySelectorAll('input[type="text"], input[type="number"]').forEach((input) => {
         updatePrefillStyle(input);
