@@ -155,9 +155,11 @@ app.post('/admin/upload-firmware', upload.single('firmware'), (req, res) => {
   const filePath = `/firmware/${filename}`;
   const uploadDate = Math.floor(Date.now() / 1000);
   const fileSize = req.file.size;
+  const crypto = require('crypto');
+  const md5 = crypto.createHash('md5').update(req.file.buffer).digest('hex');
 
-  db.run('INSERT INTO firmware (version, filename, upload_date, file_path, file_size) VALUES (?, ?, ?, ?, ?)',
-    [version, filename, uploadDate, filePath, fileSize], (err) => {
+  db.run('INSERT INTO firmware (version, filename, upload_date, file_path, file_size, md5) VALUES (?, ?, ?, ?, ?,?)',
+    [version, filename, uploadDate, filePath, fileSize, md5], (err) => {
       if (err) {
         console.error('Napaka pri nalaganju firmware:', err);
         return res.send('Firmware z to verzijo že obstaja.');
@@ -165,6 +167,7 @@ app.post('/admin/upload-firmware', upload.single('firmware'), (req, res) => {
       res.redirect('/admin');
     });
 });
+
 
 app.post('/admin/delete-firmware/:id', (req, res) => {
   if (!req.isAuthenticated() || !req.user.is_admin) {
