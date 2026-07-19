@@ -224,7 +224,7 @@ router.post('/data', (req, res) => {
 });
 // Endpoint: POST /device/updateSettings
 // Sprejme: deviceId in katera koli nastavitev (delni vnos je dovoljen)
-router.post('/updatesettings', (req, res) => {
+function handleUpdateSettings(req, res) {
   const { deviceId } = req.body;
   if (!deviceId || !/^[a-zA-Z0-9]{8}$/.test(deviceId)) {
     return res.status(400).send('Neveljaven ID naprave.');
@@ -236,36 +236,83 @@ router.post('/updatesettings', (req, res) => {
     'hitrost_motorja', 'pon', 'tor', 'sre', 'cet', 'pet', 'sob', 'ned'
   ];
 
-  const setClauses = [];
-  const params = [];
+  const checkboxFields = new Set(['casovnik2', 'pon', 'tor', 'sre', 'cet', 'pet', 'sob', 'ned']);
 
-  // Field names come from the hardcoded allowedFields list, not from user input.
-  // Values use parameterized queries (?), so there is no SQL injection risk.
-  allowedFields.forEach(field => {
-    if (req.body[field] !== undefined) {
-      setClauses.push(`${field} = ?`);
-      params.push(req.body[field]);
+  const incoming = {};
+  for (const field of allowedFields) {
+    if (req.body[field] === undefined) continue;
+
+    const raw = Array.isArray(req.body[field]) ? req.body[field][req.body[field].length - 1] : req.body[field];
+
+    if (checkboxFields.has(field)) {
+      incoming[field] = (raw === '1' || raw === 1 || raw === true || raw === 'true');
+      continue;
     }
-  });
 
-  if (setClauses.length === 0) {
+    if (raw === '') {
+      incoming[field] = '';
+      continue;
+    }
+
+    const asNumber = Number(raw);
+    incoming[field] = Number.isFinite(asNumber) && String(raw).trim() !== '' ? asNumber : raw;
+  }
+
+  const keys = Object.keys(incoming);
+  if (keys.length === 0) {
     return res.status(400).json({ error: 'Ni polj za posodobitev' });
   }
 
-  params.push(deviceId);
+  // 1) Update column fields
+  const setClauses = keys.map((k) => `${k} = ?`);
+  const colParams = keys.map((k) => incoming[k]);
+  colParams.push(deviceId);
 
   db.run(
     `UPDATE devices SET ${setClauses.join(', ')} WHERE id = ?`,
-    params,
-    (err) => {
+    colParams,
+    function (err) {
       if (err) {
-        console.error('Napaka pri posodabljanju vrednosti:', err);
+        console.error('Napaka pri posodabljanju stolpcev:', err);
         return res.status(500).send('Napaka v bazi.');
       }
-      res.send('OK');
+
+      // 2) Sync into params JSON
+      db.get('SELECT params FROM devices WHERE id = ?', [deviceId], (readErr, row) => {
+        if (readErr) {
+          console.error('Napaka pri branju params:', readErr);
+          return res.status(500).send('Napaka v bazi.');
+        }
+
+        let currentParams = {};
+        try {
+          currentParams = row?.params ? JSON.parse(row.params) : {};
+        } catch (e) {
+          console.error('Napaka pri JSON.parse(params):', e);
+          currentParams = {};
+        }
+
+        const merged = { ...currentParams, ...incoming };
+        const paramsJson = JSON.stringify(merged);
+
+        db.run(
+          'UPDATE devices SET params = ? WHERE id = ?',
+          [paramsJson, deviceId],
+          (writeErr) => {
+            if (writeErr) {
+              console.error('Napaka pri sync params:', writeErr);
+              return res.status(500).send('Napaka v bazi.');
+            }
+            return res.send('OK');
+          }
+        );
+      });
     }
   );
-});
+}
+
+router.post('/updatesettings', handleUpdateSettings);
+router.post('/updateSettings', handleUpdateSettings); // alias for ESP/client variants
 /**
  * Branje parametrov za ESP32
  * URL: /:id/params
