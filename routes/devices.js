@@ -86,7 +86,7 @@ router.get('/:id/settings', (req, res) => {
         device_name: device.name,
         value1: device.value1,
         value2: device.value2,
-        online: isOnline,
+        online: device.isOnline,
         last_update: lastUpdateFormatted
       };
 
