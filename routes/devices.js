@@ -59,35 +59,42 @@ router.get('/:id/settings', (req, res) => {
       // Pretvori SQLite integer (0/1) ali boolean v pravi JS boolean
       const toBool = (v) => v === 1 || v === true;
 
+      onsole.log('device row:', device);
+console.log('params row:', params);
+console.log('settings final:', settings);
       // Objekt, ki ga uporablja device-settings.ejs
       // Individualne kolumne (iz updatesettings) imajo prednost pred params JSON
       const settings = {
         ...params,
-        visina: device.visina,
-        wifi_cas: device.wifi_cas,
-        obvestilo_napetost: device.obvestilo_napetost,
-        obvestilo_krmilo: device.obvestilo_krmilo,
-        obvestilo_stevilka: device.obvestilo_stevilka,
-        ura1_h: device.ura1_h,
-        ura1_min: device.ura1_min,
-        ura2_h: device.ura2_h,
-        ura2_min: device.ura2_min,
-        casovnik2: toBool(device.casovnik2),
-        cas_delovanja: device.cas_delovanja,
-        hitrost_motorja: device.hitrost_motorja,
-        pon: toBool(device.pon),
-        tor: toBool(device.tor),
-        sre: toBool(device.sre),
-        cet: toBool(device.cet),
-        pet: toBool(device.pet),
-        sob: toBool(device.sob),
-        ned: toBool(device.ned),
-        device_id: device.id,
-        device_name: device.name,
-        value1: device.value1,
-        value2: device.value2,
-        online: device.isOnline,
-        last_update: lastUpdateFormatted
+  visina: device?.visina ?? params.visina ?? null,
+  wifi_cas: device?.wifi_cas ?? params.wifi_cas ?? null,
+  obvestilo_napetost: device?.obvestilo_napetost ?? params.obvestilo_napetost ?? null,
+  obvestilo_krmilo: device?.obvestilo_krmilo ?? params.obvestilo_krmilo ?? null,
+  obvestilo_stevilka: device?.obvestilo_stevilka ?? params.obvestilo_stevilka ?? null,
+
+  ura1_h: device?.ura1_h ?? params.ura1_h ?? null,
+  ura1_min: device?.ura1_min ?? params.ura1_min ?? null,
+  ura2_h: device?.ura2_h ?? params.ura2_h ?? null,
+  ura2_min: device?.ura2_min ?? params.ura2_min ?? null,
+
+  casovnik2: toBool(device?.casovnik2 ?? params.casovnik2),
+  cas_delovanja: device?.cas_delovanja ?? params.cas_delovanja ?? null,
+  hitrost_motorja: device?.hitrost_motorja ?? params.hitrost_motorja ?? null,
+
+  pon: toBool(device?.pon ?? params.pon),
+  tor: toBool(device?.tor ?? params.tor),
+  sre: toBool(device?.sre ?? params.sre),
+  cet: toBool(device?.cet ?? params.cet),
+  pet: toBool(device?.pet ?? params.pet),
+  sob: toBool(device?.sob ?? params.sob),
+  ned: toBool(device?.ned ?? params.ned),
+
+  device_id: device?.id ?? params.device_id,
+  device_name: device?.name ?? params.device_name,
+  value1: device?.value1 ?? params.value1 ?? null,
+  value2: device?.value2 ?? params.value2 ?? null,
+  online: device?.isOnline ?? params.online ?? false,
+  last_update: lastUpdateFormatted
       };
 
       res.render('device-settings', {
