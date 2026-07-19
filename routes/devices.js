@@ -94,9 +94,7 @@ router.get('/:id/settings', (req, res) => {
   online: isOnline,
   last_update: lastUpdateFormatted
       };
-onsole.log('device row:', device);
-console.log('params row:', params);
-console.log('settings final:', settings);
+
       res.render('device-settings', {
         settings,
         latestFirmware: latestFirmware || null,
