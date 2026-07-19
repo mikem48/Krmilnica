@@ -227,7 +227,7 @@
 
               <h3 class="h5 mb-3">Krmilnica</h3>
               <p class="mb-3">
-                <b>Časovnika: </b><%= settings.casovnika_on ? "On" : "Off" %>
+                <b>Časovnik 2: </b><%= settings.casovnik2 ? "On" : "Off" %>
               </p>
 
               <label class="form-label">Ura 1 in minuta:</label>
@@ -285,24 +285,6 @@
       >
     </div>
   </div>
-
-  <div class="col-md-3">
-    <input type="hidden" name="casovnik2" value="" disabled data-false-for="casovnik2">
-
-    <div class="form-check">
-      <input
-        class="form-check-input"
-        type="checkbox"
-        name="casovnik2"
-        id="casovnik2"
-        value="1"
-        data-original="<%= settings.casovnik2 ? '1' : '0' %>"
-        <%= settings.casovnik2 ? "checked" : "" %>
-      >
-      <label class="form-check-label" for="casovnik2">časovnik 2</label>
-    </div>
-  </div>
-</div>
 
                 <div class="col-md-3">
                   <input type="hidden" name="casovnik2" value="" disabled data-false-for="casovnik2">
